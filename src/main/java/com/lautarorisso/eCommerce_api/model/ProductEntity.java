@@ -7,12 +7,15 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
+@Table(name = "products")
 public class ProductEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,9 +27,9 @@ public class ProductEntity {
   @Column(nullable = false, precision = 12, scale = 2)
   private BigDecimal price;
   @Column(nullable = false)
-  private Integer stock;
+  private int stock;
 
-  public ProductEntity(String name, String description, BigDecimal price, Integer stock) {
+  public ProductEntity(String name, String description, BigDecimal price, int stock) {
     this.name = name;
     this.description = description;
     this.price = price;
@@ -43,14 +46,14 @@ public class ProductEntity {
     this.price = newPrice;
   }
 
-  public void restock(Integer quantity) {
+  public void restock(int quantity) {
     if (quantity <= 0) {
       throw new IllegalArgumentException("Quantity must be positive");
     }
     this.stock += quantity;
   }
 
-  public void decreaseStock(Integer quantity) {
+  public void decreaseStock(int quantity) {
     if (quantity <= 0) {
       throw new IllegalArgumentException("Quantity must be positive");
     }

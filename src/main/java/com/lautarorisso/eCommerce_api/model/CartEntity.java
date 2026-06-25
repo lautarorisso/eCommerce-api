@@ -1,5 +1,6 @@
 package com.lautarorisso.eCommerce_api.model;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,13 +11,16 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import jakarta.persistence.OneToMany;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
+@Table(name = "carts")
 public class CartEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -51,5 +55,9 @@ public class CartEntity {
 
   public boolean isEmpty() {
     return this.items.isEmpty();
+  }
+
+  public BigDecimal calculateTotal() {
+    return items.stream().map(CartItemEntity::getSubtotal).reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 }
