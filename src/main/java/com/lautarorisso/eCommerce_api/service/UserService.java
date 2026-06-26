@@ -5,13 +5,17 @@ import java.util.List;
 import com.lautarorisso.eCommerce_api.model.UserEntity;
 
 public interface UserService {
-    UserEntity createUser(UserEntity user);
+  UserDto createUser(CreateUserRequest request);
 
-    List<UserEntity> getAllUsers();
+  List<UserDto> getAllUsers();
 
-    UserEntity getUserById(Long id);
+  UserDto getUserById(Long userId);
 
-    UserEntity updateUser(Long id, UserEntity user);
+  UserDto updateUser(Long userId, UpdateUserRequest request);
 
-    void deleteUser(Long id);
+  void deleteUser(Long userId);
+
+  UserDto gerUserByEmail(String email);
+
+  boolean existsByEmail(String email);
 }

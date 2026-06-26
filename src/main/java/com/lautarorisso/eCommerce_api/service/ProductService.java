@@ -5,13 +5,16 @@ import java.util.List;
 import com.lautarorisso.eCommerce_api.model.ProductEntity;
 
 public interface ProductService {
-    ProductEntity createProduct(ProductEntity product);
+  ProductDto createProduct(CreateProductRequest request);
 
-    List<ProductEntity> getAllProducts();
+  ProductDto getProductById(Long productId);
 
-    ProductEntity updateProduct(Long id, ProductEntity product);
+  List<ProductDto> getAllProducts();
 
-    void deleteProduct(Long id);
+  ProductDto updateProduct(Long productId, UpdateProductRequest request);
 
-    ProductEntity getProductById(Long id);
+  void deleteProduct(Long productId);
+
+  void restockProduct(Long productId, int Quantity);
+
 }

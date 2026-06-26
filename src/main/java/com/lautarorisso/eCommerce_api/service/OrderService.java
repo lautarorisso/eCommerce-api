@@ -5,11 +5,18 @@ import java.util.List;
 import com.lautarorisso.eCommerce_api.model.OrderEntity;
 
 public interface OrderService {
-    OrderEntity createOrder(OrderEntity order);
+  OrderDto createOrder(Long userId);
 
-    List<OrderEntity> getAllOrders();
+  List<OrderDto> getAllOrders(Long userId);
 
-    OrderEntity getOrderById(Long id);
+  OrderDto getOrderById(Long orderId);
 
-    void cancelOrder(Long id);
+  void cancelOrder(Long orderId);
+
+  void payOrder(Long orderId);
+
+  void shipOrder(Long orderId);
+
+  void deliverOrder(Long orderId);
+
 }
