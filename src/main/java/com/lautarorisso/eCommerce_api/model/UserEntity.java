@@ -22,6 +22,8 @@ public class UserEntity {
   private String username;
   @Column(nullable = false, unique = true)
   private String email;
+  @Column(nullable = false)
+  private String password;
 
   public UserEntity(String username, String email) {
     if (username == null || username.isBlank()) {

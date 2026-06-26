@@ -27,9 +27,9 @@ public class ProductEntity {
   @Column(nullable = false, precision = 12, scale = 2)
   private BigDecimal price;
   @Column(nullable = false)
-  private int stock;
+  private Integer stock;
 
-  public ProductEntity(String name, String description, BigDecimal price, int stock) {
+  public ProductEntity(String name, String description, BigDecimal price, Integer stock) {
     this.name = name;
     this.description = description;
     this.price = price;
