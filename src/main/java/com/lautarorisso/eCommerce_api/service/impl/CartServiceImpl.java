@@ -5,8 +5,8 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
-import com.lautarorisso.eCommerce_api.dto.response.cartDto;
-import com.lautarorisso.eCommerce_api.mapper.cartMapper;
+import com.lautarorisso.eCommerce_api.dto.response.CartDto;
+import com.lautarorisso.eCommerce_api.mapper.CartMapper;
 import com.lautarorisso.eCommerce_api.model.CartEntity;
 import com.lautarorisso.eCommerce_api.model.CartItemEntity;
 import com.lautarorisso.eCommerce_api.model.UserEntity;
@@ -25,12 +25,12 @@ public class CartServiceImpl implements CartService {
   private final CartRepository cartRepository;
   private final UserRepository userRepository;
   private final ProductRepository productRepository;
-  private final cartMapper cartMapper;
+  private final CartMapper CartMapper;
 
   @Override
-  public cartDto getCartByUserId(Long userId) {
+  public CartDto getCartByUserId(Long userId) {
     CartEntity cart = cartRepository.findByUserId(userId).orElseGet(() -> createCart(userId));
-    return cartMapper.toDto(cart);
+    return CartMapper.toDto(cart);
   }
 
   private CartEntity createCart(Long userId) {
@@ -40,7 +40,7 @@ public class CartServiceImpl implements CartService {
   }
 
   @Override
-  public cartDto addProduct(Long cartId, Long productId, int quantity) {
+  public CartDto addProduct(Long cartId, Long productId, int quantity) {
     CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new RuntimeException("Cart not found"));
     if (!cart.isActive()) {
       throw new RuntimeException("Cart is not Active");
@@ -57,11 +57,11 @@ public class CartServiceImpl implements CartService {
       cart.addItem(newItem);
     }
     cartRepository.save(cart);
-    return cartMapper.toDto(cart);
+    return CartMapper.toDto(cart);
   }
 
   @Override
-  public cartDto removeProduct(Long cartId, Long productId) {
+  public CartDto removeProduct(Long cartId, Long productId) {
     CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new RuntimeException("Cart not found"));
     if (!cart.isActive()) {
       throw new RuntimeException("Cart is not Active");
@@ -71,11 +71,11 @@ public class CartServiceImpl implements CartService {
         .orElseThrow(() -> new IllegalArgumentException("Product not found in cart"));
     cart.removeItem(existingItem);
     cartRepository.save(cart);
-    return cartMapper.toDto(cart);
+    return CartMapper.toDto(cart);
   }
 
   @Override
-  public cartDto updateQuantity(Long cartId, Long productId, int quantity) {
+  public CartDto updateQuantity(Long cartId, Long productId, int quantity) {
     CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new RuntimeException("Cart not found"));
     if (!cart.isActive()) {
       throw new RuntimeException("Cart is not Active");
@@ -85,7 +85,7 @@ public class CartServiceImpl implements CartService {
         .orElseThrow(() -> new IllegalArgumentException("Product not found in cart"));
     existingItem.changeQuantity(quantity);
     cartRepository.save(cart);
-    return cartMapper.toDto(cart);
+    return CartMapper.toDto(cart);
   }
 
   @Override
@@ -99,13 +99,13 @@ public class CartServiceImpl implements CartService {
   }
 
   @Override
-  public cartDto checkout(Long cartId) {
+  public CartDto checkout(Long cartId) {
     CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new RuntimeException("Cart not found"));
     if (cart.isEmpty()) {
       throw new RuntimeException("Cart is empty");
     }
     cart.checkout();
     cartRepository.save(cart);
-    return cartMapper.toDto(cart);
+    return CartMapper.toDto(cart);
   }
 }

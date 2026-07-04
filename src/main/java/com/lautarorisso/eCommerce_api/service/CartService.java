@@ -1,17 +1,17 @@
 package com.lautarorisso.eCommerce_api.service;
 
-import com.lautarorisso.eCommerce_api.dto.response.cartDto;
+import com.lautarorisso.eCommerce_api.dto.response.CartDto;
 
 public interface CartService {
-  cartDto getCartByUserId(Long userId);
+  CartDto getCartByUserId(Long userId);
 
-  cartDto addProduct(Long cartId, Long productId, int quantity);
+  CartDto addProduct(Long cartId, Long productId, int quantity);
 
-  cartDto removeProduct(Long cartId, Long productId);
+  CartDto removeProduct(Long cartId, Long productId);
 
-  cartDto updateQuantity(Long cartId, Long productId, int quantity);
+  CartDto updateQuantity(Long cartId, Long productId, int quantity);
 
   void clearCart(Long cartId);
 
-  cartDto checkout(Long cartId);
+  CartDto checkout(Long cartId);
 }

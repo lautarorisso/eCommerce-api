@@ -4,16 +4,16 @@ import java.util.List;
 
 import com.lautarorisso.eCommerce_api.dto.request.CreateProductRequest;
 import com.lautarorisso.eCommerce_api.dto.request.UpdateProductRequest;
-import com.lautarorisso.eCommerce_api.dto.response.productDto;
+import com.lautarorisso.eCommerce_api.dto.response.ProductDto;
 
 public interface ProductService {
-  productDto createProduct(CreateProductRequest request);
+  ProductDto createProduct(CreateProductRequest request);
 
-  productDto getProductById(Long productId);
+  ProductDto getProductById(Long productId);
 
-  List<productDto> getAllProducts();
+  List<ProductDto> getAllProducts();
 
-  productDto updateProduct(Long productId, UpdateProductRequest request);
+  ProductDto updateProduct(Long productId, UpdateProductRequest request);
 
   void deleteProduct(Long productId);
 

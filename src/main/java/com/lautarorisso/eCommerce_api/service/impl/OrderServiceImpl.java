@@ -4,8 +4,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.lautarorisso.eCommerce_api.dto.response.orderDto;
-import com.lautarorisso.eCommerce_api.mapper.orderMapper;
+import com.lautarorisso.eCommerce_api.dto.response.OrderDto;
+import com.lautarorisso.eCommerce_api.mapper.OrderMapper;
 import com.lautarorisso.eCommerce_api.model.CartEntity;
 import com.lautarorisso.eCommerce_api.model.CartItemEntity;
 import com.lautarorisso.eCommerce_api.model.OrderEntity;
@@ -22,10 +22,10 @@ public class OrderServiceImpl implements OrderService {
 
   private final CartRepository cartRepository;
   private final OrderRepository orderRepository;
-  private final orderMapper orderMapper;
+  private final OrderMapper OrderMapper;
 
   @Override
-  public orderDto createOrder(Long cartId) {
+  public OrderDto createOrder(Long cartId) {
     CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new RuntimeException("Cart not found"));
     if (cart.isEmpty()) {
       throw new RuntimeException("Cart is empty");
@@ -37,19 +37,19 @@ public class OrderServiceImpl implements OrderService {
       order.addItem(orderItem);
     }
     orderRepository.save(order);
-    return orderMapper.toDto(order);
+    return OrderMapper.toDto(order);
   }
 
   @Override
-  public List<orderDto> getAllOrders(Long userId) {
-    return orderRepository.findByUserId(userId).stream().map(orderMapper::toDto).toList();
+  public List<OrderDto> getAllOrders(Long userId) {
+    return orderRepository.findByUserId(userId).stream().map(OrderMapper::toDto).toList();
   }
 
   @Override
-  public orderDto getOrderById(Long orderId) {
+  public OrderDto getOrderById(Long orderId) {
     OrderEntity order = orderRepository.findById(orderId)
         .orElseThrow(() -> new RuntimeException("Order not found"));
-    return orderMapper.toDto(order);
+    return OrderMapper.toDto(order);
   }
 
   @Override
@@ -57,7 +57,7 @@ public class OrderServiceImpl implements OrderService {
     OrderEntity order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
     order.cancel();
     orderRepository.save(order);
-    orderMapper.toDto(order);
+    OrderMapper.toDto(order);
   }
 
   @Override
@@ -65,7 +65,7 @@ public class OrderServiceImpl implements OrderService {
     OrderEntity order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
     order.markAsPaid();
     orderRepository.save(order);
-    orderMapper.toDto(order);
+    OrderMapper.toDto(order);
   }
 
   @Override
@@ -73,7 +73,7 @@ public class OrderServiceImpl implements OrderService {
     OrderEntity order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
     order.markAsDelivered();
     orderRepository.save(order);
-    orderMapper.toDto(order);
+    OrderMapper.toDto(order);
   }
 
   @Override
@@ -81,7 +81,7 @@ public class OrderServiceImpl implements OrderService {
     OrderEntity order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
     order.markAsShipped();
     orderRepository.save(order);
-    orderMapper.toDto(order);
+    OrderMapper.toDto(order);
   }
 
 }

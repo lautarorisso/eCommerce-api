@@ -3,14 +3,14 @@ package com.lautarorisso.eCommerce_api.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import com.lautarorisso.eCommerce_api.dto.response.cartDto;
+import com.lautarorisso.eCommerce_api.dto.response.CartDto;
 import com.lautarorisso.eCommerce_api.model.CartEntity;
 
-@Mapper(componentModel = "spring", uses = cartItemMapper.class)
-public interface cartMapper {
+@Mapper(componentModel = "spring", uses = CartItemMapper.class)
+public interface CartMapper {
   @Mapping(target = "total", expression = "java(cart.calculateTotal())")
-  cartDto toDto(CartEntity cart);
+  CartDto toDto(CartEntity cart);
 
   @Mapping(target = "user", ignore = true)
-  CartEntity toEntity(cartDto dto);
+  CartEntity toEntity(CartDto dto);
 }

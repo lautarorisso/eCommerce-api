@@ -5,5 +5,5 @@ import java.util.List;
 
 import com.lautarorisso.eCommerce_api.enums.OrderStatus;
 
-public record orderDto(Long id, List<orderItemDto> items, BigDecimal totalPrice, OrderStatus status) {
+public record OrderDto(Long id, List<OrderItemDto> items, BigDecimal totalPrice, OrderStatus status) {
 }

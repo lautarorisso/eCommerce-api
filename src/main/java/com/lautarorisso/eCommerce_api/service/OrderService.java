@@ -2,14 +2,14 @@ package com.lautarorisso.eCommerce_api.service;
 
 import java.util.List;
 
-import com.lautarorisso.eCommerce_api.dto.response.orderDto;
+import com.lautarorisso.eCommerce_api.dto.response.OrderDto;
 
 public interface OrderService {
-  orderDto createOrder(Long cartId);
+  OrderDto createOrder(Long cartId);
 
-  List<orderDto> getAllOrders(Long userId);
+  List<OrderDto> getAllOrders(Long userId);
 
-  orderDto getOrderById(Long orderId);
+  OrderDto getOrderById(Long orderId);
 
   void cancelOrder(Long orderId);
 
