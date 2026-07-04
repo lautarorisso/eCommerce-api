@@ -2,6 +2,7 @@ package com.lautarorisso.eCommerce_api.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.lautarorisso.eCommerce_api.enums.OrderStatus;
@@ -43,9 +44,9 @@ public class OrderEntity {
   @Column(nullable = false)
   private LocalDateTime createdAt;
 
-  public OrderEntity(UserEntity user, List<OrderItemEntity> items, BigDecimal totalPrice) {
+  public OrderEntity(UserEntity user) {
     this.user = user;
-    this.items = items;
+    this.items = new ArrayList<>();
     this.totalPrice = calculateTotalPrice();
     this.status = OrderStatus.PENDING;
     this.createdAt = LocalDateTime.now();
@@ -81,6 +82,10 @@ public class OrderEntity {
       throw new IllegalStateException("delivered orders cannot be cancelled");
     }
     this.status = OrderStatus.CANCELLED;
+  }
+
+  public void addItem(OrderItemEntity orderItem) {
+    items.add(orderItem);
   }
 
 }

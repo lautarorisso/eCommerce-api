@@ -2,16 +2,18 @@ package com.lautarorisso.eCommerce_api.service;
 
 import java.util.List;
 
-import com.lautarorisso.eCommerce_api.model.ProductEntity;
+import com.lautarorisso.eCommerce_api.dto.request.CreateProductRequest;
+import com.lautarorisso.eCommerce_api.dto.request.UpdateProductRequest;
+import com.lautarorisso.eCommerce_api.dto.response.productDto;
 
 public interface ProductService {
-  ProductDto createProduct(CreateProductRequest request);
+  productDto createProduct(CreateProductRequest request);
 
-  ProductDto getProductById(Long productId);
+  productDto getProductById(Long productId);
 
-  List<ProductDto> getAllProducts();
+  List<productDto> getAllProducts();
 
-  ProductDto updateProduct(Long productId, UpdateProductRequest request);
+  productDto updateProduct(Long productId, UpdateProductRequest request);
 
   void deleteProduct(Long productId);
 

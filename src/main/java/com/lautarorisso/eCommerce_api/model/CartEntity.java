@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.lautarorisso.eCommerce_api.enums.CartStatus;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -30,12 +32,15 @@ public class CartEntity {
   private UserEntity user;
   @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<CartItemEntity> items = new ArrayList<>();
+  private CartStatus status;
 
   public CartEntity(UserEntity user) {
     if (user == null) {
       throw new IllegalArgumentException("User cannot be null");
     }
     this.user = user;
+    this.items = new ArrayList<>();
+    this.status = CartStatus.ACTIVE;
   }
 
   public void addItem(CartItemEntity item) {
@@ -59,5 +64,13 @@ public class CartEntity {
 
   public BigDecimal calculateTotal() {
     return items.stream().map(CartItemEntity::getSubtotal).reduce(BigDecimal.ZERO, BigDecimal::add);
+  }
+
+  public boolean isActive() {
+    return this.status == CartStatus.ACTIVE;
+  }
+
+  public void checkout() {
+    this.status = CartStatus.CHECKED_OUT;
   }
 }

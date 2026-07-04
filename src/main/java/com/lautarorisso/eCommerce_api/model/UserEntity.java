@@ -25,7 +25,7 @@ public class UserEntity {
   @Column(nullable = false)
   private String password;
 
-  public UserEntity(String username, String email) {
+  public UserEntity(String username, String email, String password) {
     if (username == null || username.isBlank()) {
       throw new IllegalArgumentException("Username cannot be empty");
     }
@@ -34,8 +34,13 @@ public class UserEntity {
       throw new IllegalArgumentException("Invalid email");
     }
 
+    if (password == null || password.isBlank()) {
+      throw new IllegalArgumentException("Password cannot be empty");
+    }
+
     this.username = username;
     this.email = email;
+    this.password = password;
   }
 
   public void changeUsername(String newUsername) {

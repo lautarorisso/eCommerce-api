@@ -1,10 +1,14 @@
 package com.lautarorisso.eCommerce_api.service.impl;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.lautarorisso.eCommerce_api.dto.response.cartDto;
+import com.lautarorisso.eCommerce_api.mapper.cartMapper;
 import com.lautarorisso.eCommerce_api.model.CartEntity;
+import com.lautarorisso.eCommerce_api.model.CartItemEntity;
 import com.lautarorisso.eCommerce_api.model.UserEntity;
 import com.lautarorisso.eCommerce_api.model.ProductEntity;
 import com.lautarorisso.eCommerce_api.repository.UserRepository;
@@ -21,34 +25,87 @@ public class CartServiceImpl implements CartService {
   private final CartRepository cartRepository;
   private final UserRepository userRepository;
   private final ProductRepository productRepository;
+  private final cartMapper cartMapper;
 
   @Override
-  public CartEntity getCartByUserId(Long userId) {
-    return cartRepository.findByUserId(userId).orElseGet(() -> createCart(userId));
-  }
-
-  @Override
-  public CartEntity addProduct(Long cartId, Long productId, int quantity) {
-    CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new RuntimeException("Cart not found"));
-    ProductEntity product = productRepository.findById(productId)
-        .orElseThrow(() -> new RuntimeException("Product not found"));
-    Optional<CartItemEntity> existingItem = cart.getItems().stream()
-        .filter(item -> item.getProduct().getId().equals(productId)).findFirst();
-    if (existingItem.isPresent()) {
-      CartItemEntity item = existingItem.get();
-      item.setQuantity(item.getQuantity() + quantity);
-    } else {
-      CartItemEntity newItem = new CartItemEntity();
-      newItem.setCart(cart);
-      newItem.setProduct();
-    }
+  public cartDto getCartByUserId(Long userId) {
+    CartEntity cart = cartRepository.findByUserId(userId).orElseGet(() -> createCart(userId));
+    return cartMapper.toDto(cart);
   }
 
   private CartEntity createCart(Long userId) {
     UserEntity user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-    CartEntity cart = new CartEntity();
-    cart.setUser(user);
-    cart.setItems(new ArrayList<>());
+    CartEntity cart = new CartEntity(user);
     return cartRepository.save(cart);
+  }
+
+  @Override
+  public cartDto addProduct(Long cartId, Long productId, int quantity) {
+    CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new RuntimeException("Cart not found"));
+    if (!cart.isActive()) {
+      throw new RuntimeException("Cart is not Active");
+    }
+    ProductEntity product = productRepository.findById(productId)
+        .orElseThrow(() -> new RuntimeException("Product not found"));
+    Optional<CartItemEntity> existingItem = cart.getItems().stream()
+        .filter(item -> item.getProduct().getId().equals(productId)).findFirst();
+    CartItemEntity item = existingItem.orElse(null);
+    if (item != null) {
+      item.changeQuantity(item.getQuantity() + quantity);
+    } else {
+      CartItemEntity newItem = new CartItemEntity(cart, product, quantity, product.getPrice());
+      cart.addItem(newItem);
+    }
+    cartRepository.save(cart);
+    return cartMapper.toDto(cart);
+  }
+
+  @Override
+  public cartDto removeProduct(Long cartId, Long productId) {
+    CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new RuntimeException("Cart not found"));
+    if (!cart.isActive()) {
+      throw new RuntimeException("Cart is not Active");
+    }
+    CartItemEntity existingItem = cart.getItems().stream()
+        .filter(item -> item.getProduct().getId().equals(productId)).findFirst()
+        .orElseThrow(() -> new IllegalArgumentException("Product not found in cart"));
+    cart.removeItem(existingItem);
+    cartRepository.save(cart);
+    return cartMapper.toDto(cart);
+  }
+
+  @Override
+  public cartDto updateQuantity(Long cartId, Long productId, int quantity) {
+    CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new RuntimeException("Cart not found"));
+    if (!cart.isActive()) {
+      throw new RuntimeException("Cart is not Active");
+    }
+    CartItemEntity existingItem = cart.getItems().stream()
+        .filter(item -> item.getProduct().getId().equals(productId)).findFirst()
+        .orElseThrow(() -> new IllegalArgumentException("Product not found in cart"));
+    existingItem.changeQuantity(quantity);
+    cartRepository.save(cart);
+    return cartMapper.toDto(cart);
+  }
+
+  @Override
+  public void clearCart(Long cartId) {
+    CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new RuntimeException("Cart not found"));
+    if (!cart.isActive()) {
+      throw new RuntimeException("Cart is not Active");
+    }
+    cart.clear();
+    cartRepository.save(cart);
+  }
+
+  @Override
+  public cartDto checkout(Long cartId) {
+    CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new RuntimeException("Cart not found"));
+    if (cart.isEmpty()) {
+      throw new RuntimeException("Cart is empty");
+    }
+    cart.checkout();
+    cartRepository.save(cart);
+    return cartMapper.toDto(cart);
   }
 }

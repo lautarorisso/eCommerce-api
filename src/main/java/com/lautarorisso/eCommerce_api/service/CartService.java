@@ -1,19 +1,17 @@
 package com.lautarorisso.eCommerce_api.service;
 
-import java.math.BigDecimal;
-
-import com.lautarorisso.eCommerce_api.model.CartEntity;
+import com.lautarorisso.eCommerce_api.dto.response.cartDto;
 
 public interface CartService {
-  CartDto getCartByUserId(Long userId);
+  cartDto getCartByUserId(Long userId);
 
-  void addProduct(Long cartId, Long productId, int quantity);
+  cartDto addProduct(Long cartId, Long productId, int quantity);
 
-  void removeProduct(Long cartId, Long productId);
+  cartDto removeProduct(Long cartId, Long productId);
 
-  void updateQuantity(Long cartId, Long productId, int quantity);
+  cartDto updateQuantity(Long cartId, Long productId, int quantity);
 
   void clearCart(Long cartId);
 
-  BigDecimal calculateCartTotal(Long userId);
+  cartDto checkout(Long cartId);
 }

@@ -36,6 +36,20 @@ public class ProductEntity {
     this.stock = stock;
   }
 
+  public void changeName(String name) {
+    if (name == null || name.isBlank()) {
+      throw new IllegalArgumentException("Name cannot be empty");
+    }
+    this.name = name;
+  }
+
+  public void changeDescription(String description) {
+    if (description == null || description.isBlank()) {
+      throw new IllegalArgumentException("Description cannot be empty");
+    }
+    this.description = description;
+  }
+
   public void updatePrice(BigDecimal newPrice) {
     if (newPrice == null) {
       throw new IllegalArgumentException("Price cannot be null");

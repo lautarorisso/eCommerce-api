@@ -2,20 +2,22 @@ package com.lautarorisso.eCommerce_api.service;
 
 import java.util.List;
 
-import com.lautarorisso.eCommerce_api.model.UserEntity;
+import com.lautarorisso.eCommerce_api.dto.request.CreateUserRequest;
+import com.lautarorisso.eCommerce_api.dto.request.UpdateUserRequest;
+import com.lautarorisso.eCommerce_api.dto.response.userDto;
 
 public interface UserService {
-  UserDto createUser(CreateUserRequest request);
+  userDto createUser(CreateUserRequest request);
 
-  List<UserDto> getAllUsers();
+  List<userDto> getAllUsers();
 
-  UserDto getUserById(Long userId);
+  userDto getUserById(Long userId);
 
-  UserDto updateUser(Long userId, UpdateUserRequest request);
+  userDto updateUser(Long userId, UpdateUserRequest request);
 
   void deleteUser(Long userId);
 
-  UserDto gerUserByEmail(String email);
+  userDto getUserByEmail(String email);
 
   boolean existsByEmail(String email);
 }
