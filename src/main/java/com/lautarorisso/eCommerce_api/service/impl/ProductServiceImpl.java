@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import com.lautarorisso.eCommerce_api.dto.request.CreateProductRequest;
 import com.lautarorisso.eCommerce_api.dto.request.UpdateProductRequest;
 import com.lautarorisso.eCommerce_api.dto.response.ProductDto;
+import com.lautarorisso.eCommerce_api.exceptions.DuplicateResourceException;
+import com.lautarorisso.eCommerce_api.exceptions.ResourceNotFoundException;
 import com.lautarorisso.eCommerce_api.mapper.ProductMapper;
 import com.lautarorisso.eCommerce_api.model.ProductEntity;
 import com.lautarorisso.eCommerce_api.repository.ProductRepository;
@@ -18,35 +20,35 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
 
-  private final ProductMapper ProductMapper;
+  private final ProductMapper productMapper;
   private final ProductRepository productRepository;
 
   @Override
   public ProductDto createProduct(CreateProductRequest request) {
     if (productRepository.existsByName(request.name())) {
-      throw new RuntimeException("Product already exists");
+      throw new DuplicateResourceException("Product", "name", request.name());
     }
-    ProductEntity product = ProductMapper.toEntity(request);
+    ProductEntity product = productMapper.toEntity(request);
     ProductEntity savedProduct = productRepository.save(product);
-    return ProductMapper.toDto(savedProduct);
+    return productMapper.toDto(savedProduct);
   }
 
   @Override
   public ProductDto getProductById(Long productId) {
     ProductEntity product = productRepository.findById(productId)
-        .orElseThrow(() -> new RuntimeException("Product not found"));
-    return ProductMapper.toDto(product);
+        .orElseThrow(() -> new ResourceNotFoundException("Product", productId));
+    return productMapper.toDto(product);
   }
 
   @Override
   public List<ProductDto> getAllProducts() {
-    return productRepository.findAll().stream().map(ProductMapper::toDto).toList();
+    return productRepository.findAll().stream().map(productMapper::toDto).toList();
   }
 
   @Override
   public ProductDto updateProduct(Long productId, UpdateProductRequest request) {
     ProductEntity product = productRepository.findById(productId)
-        .orElseThrow(() -> new RuntimeException("Product not found"));
+        .orElseThrow(() -> new ResourceNotFoundException("Product", productId));
     if (request.name() != null) {
       product.changeName(request.name());
     }
@@ -57,13 +59,13 @@ public class ProductServiceImpl implements ProductService {
       product.updatePrice(request.price());
     }
     ProductEntity updatedProduct = productRepository.save(product);
-    return ProductMapper.toDto(updatedProduct);
+    return productMapper.toDto(updatedProduct);
   }
 
   @Override
   public void deleteProduct(Long productId) {
     if (!productRepository.existsById(productId)) {
-      throw new RuntimeException("Product not found");
+      throw new ResourceNotFoundException("Product", productId);
     }
     productRepository.deleteById(productId);
   }
@@ -71,7 +73,7 @@ public class ProductServiceImpl implements ProductService {
   @Override
   public void restockProduct(Long productId, int quantity) {
     ProductEntity product = productRepository.findById(productId)
-        .orElseThrow(() -> new RuntimeException("Product not found"));
+        .orElseThrow(() -> new ResourceNotFoundException("Product", productId));
     product.restock(quantity);
     productRepository.save(product);
   }

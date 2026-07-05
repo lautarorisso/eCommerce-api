@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.lautarorisso.eCommerce_api.dto.response.OrderDto;
+import com.lautarorisso.eCommerce_api.exceptions.InvalidOperationException;
+import com.lautarorisso.eCommerce_api.exceptions.ResourceNotFoundException;
 import com.lautarorisso.eCommerce_api.mapper.OrderMapper;
 import com.lautarorisso.eCommerce_api.model.CartEntity;
 import com.lautarorisso.eCommerce_api.model.CartItemEntity;
@@ -22,13 +24,13 @@ public class OrderServiceImpl implements OrderService {
 
   private final CartRepository cartRepository;
   private final OrderRepository orderRepository;
-  private final OrderMapper OrderMapper;
+  private final OrderMapper orderMapper;
 
   @Override
   public OrderDto createOrder(Long cartId) {
-    CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new RuntimeException("Cart not found"));
+    CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new ResourceNotFoundException("Cart", cartId));
     if (cart.isEmpty()) {
-      throw new RuntimeException("Cart is empty");
+      throw new InvalidOperationException("Cart is empty");
     }
     OrderEntity order = new OrderEntity(cart.getUser());
     for (CartItemEntity cartItem : cart.getItems()) {
@@ -37,51 +39,51 @@ public class OrderServiceImpl implements OrderService {
       order.addItem(orderItem);
     }
     orderRepository.save(order);
-    return OrderMapper.toDto(order);
+    return orderMapper.toDto(order);
   }
 
   @Override
   public List<OrderDto> getAllOrders(Long userId) {
-    return orderRepository.findByUserId(userId).stream().map(OrderMapper::toDto).toList();
+    return orderRepository.findByUserId(userId).stream().map(orderMapper::toDto).toList();
   }
 
   @Override
   public OrderDto getOrderById(Long orderId) {
     OrderEntity order = orderRepository.findById(orderId)
-        .orElseThrow(() -> new RuntimeException("Order not found"));
-    return OrderMapper.toDto(order);
+        .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
+    return orderMapper.toDto(order);
   }
 
   @Override
   public void cancelOrder(Long orderId) {
-    OrderEntity order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
+    OrderEntity order = orderRepository.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
     order.cancel();
     orderRepository.save(order);
-    OrderMapper.toDto(order);
+    orderMapper.toDto(order);
   }
 
   @Override
   public void payOrder(Long orderId) {
-    OrderEntity order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
+    OrderEntity order = orderRepository.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
     order.markAsPaid();
     orderRepository.save(order);
-    OrderMapper.toDto(order);
+    orderMapper.toDto(order);
   }
 
   @Override
   public void deliverOrder(Long orderId) {
-    OrderEntity order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
+    OrderEntity order = orderRepository.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
     order.markAsDelivered();
     orderRepository.save(order);
-    OrderMapper.toDto(order);
+    orderMapper.toDto(order);
   }
 
   @Override
   public void shipOrder(Long orderId) {
-    OrderEntity order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
+    OrderEntity order = orderRepository.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
     order.markAsShipped();
     orderRepository.save(order);
-    OrderMapper.toDto(order);
+    orderMapper.toDto(order);
   }
 
 }
