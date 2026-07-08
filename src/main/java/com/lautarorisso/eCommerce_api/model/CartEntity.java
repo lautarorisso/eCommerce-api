@@ -1,18 +1,24 @@
 package com.lautarorisso.eCommerce_api.model;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.lautarorisso.eCommerce_api.enums.CartStatus;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.OneToMany;
 import lombok.AccessLevel;
@@ -32,7 +38,10 @@ public class CartEntity {
   private UserEntity user;
   @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<CartItemEntity> items = new ArrayList<>();
+  @Enumerated(EnumType.STRING)
   private CartStatus status;
+  @Column(nullable = false)
+  private LocalDateTime lastActivity;
 
   public CartEntity(UserEntity user) {
     if (user == null) {
@@ -41,6 +50,13 @@ public class CartEntity {
     this.user = user;
     this.items = new ArrayList<>();
     this.status = CartStatus.ACTIVE;
+    this.lastActivity = LocalDateTime.now();
+  }
+
+  @PrePersist
+  @PreUpdate
+  public void updateLastActivity() {
+    this.lastActivity = LocalDateTime.now();
   }
 
   public void addItem(CartItemEntity item) {
@@ -70,7 +86,8 @@ public class CartEntity {
     return this.status == CartStatus.ACTIVE;
   }
 
-  public void checkout() {
-    this.status = CartStatus.CHECKED_OUT;
+  public void abandon() {
+    this.status = CartStatus.ABANDONED;
   }
+
 }
