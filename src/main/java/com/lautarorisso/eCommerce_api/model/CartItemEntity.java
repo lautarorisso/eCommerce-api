@@ -32,9 +32,9 @@ public class CartItemEntity {
   @Column(nullable = false)
   private Integer quantity;
   @Column(nullable = false, precision = 10, scale = 2)
-  private BigDecimal price;
+  private BigDecimal unitPrice;
 
-  public CartItemEntity(CartEntity cart, ProductEntity product, Integer quantity, BigDecimal price) {
+  public CartItemEntity(CartEntity cart, ProductEntity product, Integer quantity, BigDecimal unitPrice) {
     if (cart == null) {
       throw new IllegalArgumentException("Cart cannot be null");
     }
@@ -47,7 +47,7 @@ public class CartItemEntity {
     this.cart = cart;
     this.product = product;
     this.quantity = quantity;
-    this.price = price;
+    this.unitPrice = unitPrice;
   }
 
   public void changeQuantity(int newQuantity) {
@@ -58,6 +58,6 @@ public class CartItemEntity {
   }
 
   public BigDecimal getSubtotal() {
-    return this.price.multiply(BigDecimal.valueOf(this.quantity));
+    return this.unitPrice.multiply(BigDecimal.valueOf(this.quantity));
   }
 }

@@ -55,8 +55,8 @@ public class ProductServiceImpl implements ProductService {
     if (request.description() != null) {
       product.changeDescription(request.description());
     }
-    if (request.price() != null) {
-      product.updatePrice(request.price());
+    if (request.unitPrice() != null) {
+      product.updatePrice(request.unitPrice());
     }
     ProductEntity updatedProduct = productRepository.save(product);
     return productMapper.toDto(updatedProduct);

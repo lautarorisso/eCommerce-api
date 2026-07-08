@@ -55,7 +55,7 @@ public class CartServiceImpl implements CartService {
     if (item != null) {
       item.changeQuantity(item.getQuantity() + quantity);
     } else {
-      CartItemEntity newItem = new CartItemEntity(cart, product, quantity, product.getPrice());
+      CartItemEntity newItem = new CartItemEntity(cart, product, quantity, product.getUnitPrice());
       cart.addItem(newItem);
     }
     cartRepository.save(cart);

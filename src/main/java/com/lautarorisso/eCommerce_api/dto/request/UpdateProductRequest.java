@@ -7,5 +7,5 @@ import jakarta.validation.constraints.DecimalMin;
 public record UpdateProductRequest(
     String name,
     String description,
-    @DecimalMin("0.01") BigDecimal price) {
+    @DecimalMin("0.01") BigDecimal unitPrice) {
 }

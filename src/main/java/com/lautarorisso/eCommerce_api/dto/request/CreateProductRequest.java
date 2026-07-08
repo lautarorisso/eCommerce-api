@@ -10,6 +10,6 @@ import jakarta.validation.constraints.NotNull;
 public record CreateProductRequest(
     @NotBlank String name,
     @NotBlank String description,
-    @NotNull @DecimalMin("0.01") BigDecimal price,
+    @NotNull @DecimalMin("0.01") BigDecimal unitPrice,
     @NotNull @Min(0) Integer stock) {
 }

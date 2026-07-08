@@ -25,14 +25,14 @@ public class ProductEntity {
   @Column(nullable = false, length = 500)
   private String description;
   @Column(nullable = false, precision = 12, scale = 2)
-  private BigDecimal price;
+  private BigDecimal unitPrice;
   @Column(nullable = false)
   private Integer stock;
 
-  public ProductEntity(String name, String description, BigDecimal price, Integer stock) {
+  public ProductEntity(String name, String description, BigDecimal unitPrice, Integer stock) {
     this.name = name;
     this.description = description;
-    this.price = price;
+    this.unitPrice = unitPrice;
     this.stock = stock;
   }
 
@@ -57,7 +57,7 @@ public class ProductEntity {
     if (newPrice.compareTo(BigDecimal.ZERO) < 0) {
       throw new IllegalArgumentException("Price cannot be negative");
     }
-    this.price = newPrice;
+    this.unitPrice = newPrice;
   }
 
   public void restock(int quantity) {
