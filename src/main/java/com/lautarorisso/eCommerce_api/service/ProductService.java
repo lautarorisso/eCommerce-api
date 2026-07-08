@@ -17,6 +17,6 @@ public interface ProductService {
 
   void deleteProduct(Long productId);
 
-  void restockProduct(Long productId, int Quantity);
+  void restockProduct(Long productId, int quantity);
 
 }

@@ -58,6 +58,7 @@ public class ProductController {
   }
 
   @PatchMapping("/{productId}/restock")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
   public void restockProduct(@PathVariable Long productId, @RequestParam int quantity) {
     productService.restockProduct(productId, quantity);
   }
