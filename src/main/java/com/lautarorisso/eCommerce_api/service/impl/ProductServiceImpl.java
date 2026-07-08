@@ -8,9 +8,12 @@ import com.lautarorisso.eCommerce_api.dto.request.CreateProductRequest;
 import com.lautarorisso.eCommerce_api.dto.request.UpdateProductRequest;
 import com.lautarorisso.eCommerce_api.dto.response.ProductDto;
 import com.lautarorisso.eCommerce_api.exceptions.DuplicateResourceException;
+import com.lautarorisso.eCommerce_api.exceptions.InvalidOperationException;
 import com.lautarorisso.eCommerce_api.exceptions.ResourceNotFoundException;
 import com.lautarorisso.eCommerce_api.mapper.ProductMapper;
 import com.lautarorisso.eCommerce_api.model.ProductEntity;
+import com.lautarorisso.eCommerce_api.repository.CartItemRepository;
+import com.lautarorisso.eCommerce_api.repository.OrderItemRepository;
 import com.lautarorisso.eCommerce_api.repository.ProductRepository;
 import com.lautarorisso.eCommerce_api.service.ProductService;
 
@@ -22,6 +25,8 @@ public class ProductServiceImpl implements ProductService {
 
   private final ProductMapper productMapper;
   private final ProductRepository productRepository;
+  private final CartItemRepository cartItemRepository;
+  private final OrderItemRepository orderItemRepository;
 
   @Override
   public ProductDto createProduct(CreateProductRequest request) {
@@ -66,6 +71,12 @@ public class ProductServiceImpl implements ProductService {
   public void deleteProduct(Long productId) {
     if (!productRepository.existsById(productId)) {
       throw new ResourceNotFoundException("Product", productId);
+    }
+    if (cartItemRepository.existsByProductId(productId)) {
+      throw new InvalidOperationException("Cannot delete product: it is in one or more carts");
+    }
+    if (orderItemRepository.existsByProductId(productId)) {
+      throw new InvalidOperationException("Cannot delete product: it is in one or more orders");
     }
     productRepository.deleteById(productId);
   }

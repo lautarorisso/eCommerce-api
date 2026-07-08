@@ -8,9 +8,12 @@ import com.lautarorisso.eCommerce_api.dto.request.CreateUserRequest;
 import com.lautarorisso.eCommerce_api.dto.request.UpdateUserRequest;
 import com.lautarorisso.eCommerce_api.dto.response.UserDto;
 import com.lautarorisso.eCommerce_api.exceptions.DuplicateResourceException;
+import com.lautarorisso.eCommerce_api.exceptions.InvalidOperationException;
 import com.lautarorisso.eCommerce_api.exceptions.ResourceNotFoundException;
 import com.lautarorisso.eCommerce_api.mapper.UserMapper;
 import com.lautarorisso.eCommerce_api.model.UserEntity;
+import com.lautarorisso.eCommerce_api.repository.CartRepository;
+import com.lautarorisso.eCommerce_api.repository.OrderRepository;
 import com.lautarorisso.eCommerce_api.repository.UserRepository;
 import com.lautarorisso.eCommerce_api.service.UserService;
 
@@ -21,6 +24,8 @@ import lombok.RequiredArgsConstructor;
 public class UserServiceImpl implements UserService {
 
   private final UserRepository userRepository;
+  private final CartRepository cartRepository;
+  private final OrderRepository orderRepository;
   private final UserMapper userMapper;
 
   @Override
@@ -66,6 +71,12 @@ public class UserServiceImpl implements UserService {
   public void deleteUser(Long userId) {
     if (!userRepository.existsById(userId)) {
       throw new ResourceNotFoundException("User", userId);
+    }
+    if (cartRepository.existsByUserId(userId)) {
+      throw new InvalidOperationException("Cannot delete user: user has an active cart");
+    }
+    if (orderRepository.existsByUserId(userId)) {
+      throw new InvalidOperationException("Cannot delete user: user has orders");
     }
     userRepository.deleteById(userId);
   }
