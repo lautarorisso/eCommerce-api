@@ -50,8 +50,4 @@ public class CartController {
     cartService.clearCart(cartId);
   }
 
-  @PostMapping("/{cartId}/checkout")
-  public CartDto checkout(@PathVariable Long cartId) {
-    return cartService.checkout(cartId);
-  }
 }

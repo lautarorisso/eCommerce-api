@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,6 +29,8 @@ public class ProductEntity {
   private BigDecimal unitPrice;
   @Column(nullable = false)
   private Integer stock;
+  @Version
+  private Long version;
 
   public ProductEntity(String name, String description, BigDecimal unitPrice, Integer stock) {
     this.name = name;

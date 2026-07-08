@@ -13,5 +13,4 @@ public interface CartService {
 
   void clearCart(Long cartId);
 
-  CartDto checkout(Long cartId);
 }

@@ -2,6 +2,8 @@ package com.lautarorisso.eCommerce_api.model;
 
 import java.math.BigDecimal;
 
+import com.lautarorisso.eCommerce_api.exceptions.InsufficientResourcesException;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -53,6 +55,9 @@ public class CartItemEntity {
   public void changeQuantity(int newQuantity) {
     if (newQuantity <= 0) {
       throw new IllegalArgumentException("Quantity must be positive");
+    }
+    if (newQuantity > this.product.getStock()) {
+      throw new InsufficientResourcesException(this.product.getName(), newQuantity, this.product.getStock());
     }
     this.quantity = newQuantity;
   }

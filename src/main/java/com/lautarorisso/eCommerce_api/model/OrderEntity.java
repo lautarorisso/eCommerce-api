@@ -47,13 +47,12 @@ public class OrderEntity {
   public OrderEntity(UserEntity user) {
     this.user = user;
     this.items = new ArrayList<>();
-    this.totalPrice = calculateTotalPrice();
     this.status = OrderStatus.PENDING;
     this.createdAt = LocalDateTime.now();
   }
 
-  private BigDecimal calculateTotalPrice() {
-    return items.stream().map(OrderItemEntity::getSubtotal).reduce(BigDecimal.ZERO, BigDecimal::add);
+  private void calculateTotalPrice() {
+    this.totalPrice = items.stream().map(OrderItemEntity::getSubtotal).reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 
   public void markAsPaid() {
@@ -78,14 +77,15 @@ public class OrderEntity {
   }
 
   public void cancel() {
-    if (this.status == OrderStatus.DELIVERED) {
-      throw new IllegalStateException("delivered orders cannot be cancelled");
+    if (this.status != OrderStatus.PENDING) {
+      throw new IllegalStateException("Only pending orders can be cancelled");
     }
     this.status = OrderStatus.CANCELLED;
   }
 
   public void addItem(OrderItemEntity orderItem) {
     items.add(orderItem);
+    calculateTotalPrice();
   }
 
 }

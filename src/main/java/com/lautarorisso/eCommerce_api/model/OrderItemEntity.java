@@ -26,8 +26,9 @@ public class OrderItemEntity {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "order_id", nullable = false)
   private OrderEntity order;
-  @Column(nullable = false)
-  private String productName;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "product_id", nullable = false)
+  private ProductEntity product;
   @Column(nullable = false, precision = 10, scale = 2)
   private BigDecimal unitPrice;
   @Column(nullable = false)
@@ -35,9 +36,21 @@ public class OrderItemEntity {
   @Column(nullable = false, precision = 10, scale = 2)
   private BigDecimal subtotal;
 
-  public OrderItemEntity(OrderEntity order, String productName, BigDecimal unitPrice, Integer quantity) {
+  public OrderItemEntity(OrderEntity order, ProductEntity product, BigDecimal unitPrice, Integer quantity) {
+    if (order == null) {
+      throw new IllegalArgumentException("Order cannot be null");
+    }
+    if (product == null) {
+      throw new IllegalArgumentException("Product cannot be null");
+    }
+    if (unitPrice.compareTo(BigDecimal.ZERO) <= 0) {
+      throw new IllegalArgumentException("Unit price must be positive");
+    }
+    if (quantity <= 0) {
+      throw new IllegalArgumentException("Quantity must be positive");
+    }
     this.order = order;
-    this.productName = productName;
+    this.product = product;
     this.unitPrice = unitPrice;
     this.quantity = quantity;
     this.subtotal = unitPrice.multiply(BigDecimal.valueOf(quantity));

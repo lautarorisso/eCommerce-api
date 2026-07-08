@@ -2,12 +2,15 @@ package com.lautarorisso.eCommerce_api.exceptions;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -24,10 +27,25 @@ public class GlobalExceptionHandler {
         .body(new ErrorResponse(HttpStatus.CONFLICT.value(), ex.getMessage()));
   }
 
+  @ExceptionHandler(InsufficientResourcesException.class)
+  public ResponseEntity<ErrorResponse> handleConflict(InsufficientResourcesException ex) {
+    return ResponseEntity.status(HttpStatus.CONFLICT)
+        .body(new ErrorResponse(HttpStatus.CONFLICT.value(), ex.getMessage()));
+  }
+
   @ExceptionHandler(InvalidOperationException.class)
   public ResponseEntity<ErrorResponse> handleBadRequest(InvalidOperationException ex) {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
+  }
+
+  @ExceptionHandler(ConstraintViolationException.class)
+  public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException ex) {
+    String message = ex.getConstraintViolations().stream()
+        .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+        .collect(Collectors.joining(", "));
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), message));
   }
 
   @ExceptionHandler(IllegalArgumentException.class)

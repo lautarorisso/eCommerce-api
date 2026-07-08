@@ -1,9 +1,11 @@
 package com.lautarorisso.eCommerce_api.service.impl;
 
-import java.util.ArrayList;
 import java.util.Optional;
 
+import com.lautarorisso.eCommerce_api.exceptions.InsufficientResourcesException;
+
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.lautarorisso.eCommerce_api.dto.response.CartDto;
 import com.lautarorisso.eCommerce_api.exceptions.InvalidOperationException;
@@ -15,6 +17,7 @@ import com.lautarorisso.eCommerce_api.model.UserEntity;
 import com.lautarorisso.eCommerce_api.model.ProductEntity;
 import com.lautarorisso.eCommerce_api.repository.UserRepository;
 import com.lautarorisso.eCommerce_api.service.CartService;
+
 import com.lautarorisso.eCommerce_api.repository.ProductRepository;
 import com.lautarorisso.eCommerce_api.repository.CartRepository;
 
@@ -35,12 +38,14 @@ public class CartServiceImpl implements CartService {
     return cartMapper.toDto(cart);
   }
 
+  @Transactional
   private CartEntity createCart(Long userId) {
     UserEntity user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User", userId));
     CartEntity cart = new CartEntity(user);
     return cartRepository.save(cart);
   }
 
+  @Transactional
   @Override
   public CartDto addProduct(Long cartId, Long productId, int quantity) {
     CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new ResourceNotFoundException("Cart", cartId));
@@ -49,6 +54,9 @@ public class CartServiceImpl implements CartService {
     }
     ProductEntity product = productRepository.findById(productId)
         .orElseThrow(() -> new ResourceNotFoundException("Product", productId));
+    if (quantity > product.getStock()) {
+      throw new InsufficientResourcesException(product.getName(), quantity, product.getStock());
+    }
     Optional<CartItemEntity> existingItem = cart.getItems().stream()
         .filter(item -> item.getProduct().getId().equals(productId)).findFirst();
     CartItemEntity item = existingItem.orElse(null);
@@ -62,6 +70,7 @@ public class CartServiceImpl implements CartService {
     return cartMapper.toDto(cart);
   }
 
+  @Transactional
   @Override
   public CartDto removeProduct(Long cartId, Long productId) {
     CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new ResourceNotFoundException("Cart", cartId));
@@ -76,6 +85,7 @@ public class CartServiceImpl implements CartService {
     return cartMapper.toDto(cart);
   }
 
+  @Transactional
   @Override
   public CartDto updateQuantity(Long cartId, Long productId, int quantity) {
     CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new ResourceNotFoundException("Cart", cartId));
@@ -90,6 +100,7 @@ public class CartServiceImpl implements CartService {
     return cartMapper.toDto(cart);
   }
 
+  @Transactional
   @Override
   public void clearCart(Long cartId) {
     CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new ResourceNotFoundException("Cart", cartId));
@@ -100,14 +111,4 @@ public class CartServiceImpl implements CartService {
     cartRepository.save(cart);
   }
 
-  @Override
-  public CartDto checkout(Long cartId) {
-    CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new ResourceNotFoundException("Cart", cartId));
-    if (cart.isEmpty()) {
-      throw new InvalidOperationException("Cart is empty");
-    }
-    cart.checkout();
-    cartRepository.save(cart);
-    return cartMapper.toDto(cart);
-  }
 }
