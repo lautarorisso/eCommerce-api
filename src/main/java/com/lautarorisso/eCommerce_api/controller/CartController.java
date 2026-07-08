@@ -1,6 +1,7 @@
 package com.lautarorisso.eCommerce_api.controller;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -14,8 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.lautarorisso.eCommerce_api.dto.response.CartDto;
 import com.lautarorisso.eCommerce_api.service.CartService;
 
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 
+@Validated
 @RestController
 @RequestMapping("/api/carts")
 @RequiredArgsConstructor
@@ -30,7 +33,7 @@ public class CartController {
 
   @PostMapping("/{cartId}/items")
   @ResponseStatus(HttpStatus.CREATED)
-  public CartDto addProduct(@PathVariable Long cartId, @RequestParam Long productId, @RequestParam int quantity) {
+  public CartDto addProduct(@PathVariable Long cartId, @RequestParam Long productId, @RequestParam @Positive int quantity) {
     return cartService.addProduct(cartId, productId, quantity);
   }
 
@@ -40,7 +43,7 @@ public class CartController {
   }
 
   @PatchMapping("/{cartId}/items/{productId}")
-  public CartDto updateQuantity(@PathVariable Long cartId, @PathVariable Long productId, @RequestParam int quantity) {
+  public CartDto updateQuantity(@PathVariable Long cartId, @PathVariable Long productId, @RequestParam @Positive int quantity) {
     return cartService.updateQuantity(cartId, productId, quantity);
   }
 
