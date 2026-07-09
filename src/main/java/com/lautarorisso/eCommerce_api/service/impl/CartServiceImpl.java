@@ -3,7 +3,10 @@ package com.lautarorisso.eCommerce_api.service.impl;
 import java.util.Optional;
 
 import com.lautarorisso.eCommerce_api.exceptions.InsufficientResourcesException;
+import com.lautarorisso.eCommerce_api.security.CurrentUser;
+import com.lautarorisso.eCommerce_api.security.SecurityUtils;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,9 +34,14 @@ public class CartServiceImpl implements CartService {
   private final UserRepository userRepository;
   private final ProductRepository productRepository;
   private final CartMapper cartMapper;
+  private final SecurityUtils securityUtils;
 
   @Override
   public CartDto getCartByUserId(Long userId) {
+    CurrentUser currentUser = securityUtils.getCurrentUser();
+    if (!currentUser.id().equals(userId) && !securityUtils.isAdmin()) {
+      throw new AccessDeniedException("Access denied");
+    }
     CartEntity cart = cartRepository.findByUserId(userId).orElseGet(() -> createCart(userId));
     return cartMapper.toDto(cart);
   }
@@ -49,6 +57,10 @@ public class CartServiceImpl implements CartService {
   @Override
   public CartDto addProduct(Long cartId, Long productId, int quantity) {
     CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new ResourceNotFoundException("Cart", cartId));
+    CurrentUser currentUser = securityUtils.getCurrentUser();
+    if (!cart.getUser().getId().equals(currentUser.id()) && !securityUtils.isAdmin()) {
+      throw new AccessDeniedException("Access denied");
+    }
     if (!cart.isActive()) {
       throw new InvalidOperationException("Cart is not active");
     }
@@ -74,6 +86,10 @@ public class CartServiceImpl implements CartService {
   @Override
   public CartDto removeProduct(Long cartId, Long productId) {
     CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new ResourceNotFoundException("Cart", cartId));
+    CurrentUser currentUser = securityUtils.getCurrentUser();
+    if (!cart.getUser().getId().equals(currentUser.id()) && !securityUtils.isAdmin()) {
+      throw new AccessDeniedException("Access denied");
+    }
     if (!cart.isActive()) {
       throw new InvalidOperationException("Cart is not active");
     }
@@ -89,6 +105,10 @@ public class CartServiceImpl implements CartService {
   @Override
   public CartDto updateQuantity(Long cartId, Long productId, int quantity) {
     CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new ResourceNotFoundException("Cart", cartId));
+    CurrentUser currentUser = securityUtils.getCurrentUser();
+    if (!cart.getUser().getId().equals(currentUser.id()) && !securityUtils.isAdmin()) {
+      throw new AccessDeniedException("Access denied");
+    }
     if (!cart.isActive()) {
       throw new InvalidOperationException("Cart is not active");
     }
@@ -104,6 +124,10 @@ public class CartServiceImpl implements CartService {
   @Override
   public void clearCart(Long cartId) {
     CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new ResourceNotFoundException("Cart", cartId));
+    CurrentUser currentUser = securityUtils.getCurrentUser();
+    if (!cart.getUser().getId().equals(currentUser.id()) && !securityUtils.isAdmin()) {
+      throw new AccessDeniedException("Access denied");
+    }
     if (!cart.isActive()) {
       throw new InvalidOperationException("Cart is not active");
     }

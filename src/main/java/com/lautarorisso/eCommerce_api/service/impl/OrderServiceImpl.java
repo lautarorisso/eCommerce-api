@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,8 @@ import com.lautarorisso.eCommerce_api.model.ProductEntity;
 import com.lautarorisso.eCommerce_api.repository.CartRepository;
 import com.lautarorisso.eCommerce_api.repository.OrderRepository;
 import com.lautarorisso.eCommerce_api.repository.ProductRepository;
+import com.lautarorisso.eCommerce_api.security.CurrentUser;
+import com.lautarorisso.eCommerce_api.security.SecurityUtils;
 import com.lautarorisso.eCommerce_api.service.OrderService;
 
 import lombok.RequiredArgsConstructor;
@@ -32,6 +35,7 @@ public class OrderServiceImpl implements OrderService {
   private final OrderRepository orderRepository;
   private final ProductRepository productRepository;
   private final OrderMapper orderMapper;
+  private final SecurityUtils securityUtils;
 
   @Transactional
   @Override
@@ -57,13 +61,22 @@ public class OrderServiceImpl implements OrderService {
 
   @Override
   public Page<OrderDto> getAllOrders(Long userId, Pageable pageable) {
+    CurrentUser currentUser = securityUtils.getCurrentUser();
+    if (!currentUser.id().equals(userId) && !securityUtils.isAdmin()) {
+      throw new AccessDeniedException("Access denied");
+    }
     return orderRepository.findByUserId(userId, pageable).map(orderMapper::toDto);
   }
 
+  @Transactional(readOnly = true)
   @Override
   public OrderDto getOrderById(Long orderId) {
     OrderEntity order = orderRepository.findById(orderId)
         .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
+    CurrentUser currentUser = securityUtils.getCurrentUser();
+    if (!order.getUser().getId().equals(currentUser.id()) && !securityUtils.isAdmin()) {
+      throw new AccessDeniedException("Access denied");
+    }
     return orderMapper.toDto(order);
   }
 
@@ -72,6 +85,10 @@ public class OrderServiceImpl implements OrderService {
   public void cancelOrder(Long orderId) {
     OrderEntity order = orderRepository.findById(orderId)
         .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
+    CurrentUser currentUser = securityUtils.getCurrentUser();
+    if (!order.getUser().getId().equals(currentUser.id()) && !securityUtils.isAdmin()) {
+      throw new AccessDeniedException("Access denied");
+    }
     order.cancel();
     List<ProductEntity> products = order.getItems().stream()
         .map(item -> {
@@ -88,6 +105,10 @@ public class OrderServiceImpl implements OrderService {
   public void payOrder(Long orderId) {
     OrderEntity order = orderRepository.findById(orderId)
         .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
+    CurrentUser currentUser = securityUtils.getCurrentUser();
+    if (!order.getUser().getId().equals(currentUser.id()) && !securityUtils.isAdmin()) {
+      throw new AccessDeniedException("Access denied");
+    }
     order.markAsPaid();
     List<ProductEntity> products = order.getItems().stream()
         .map(item -> {
@@ -104,6 +125,10 @@ public class OrderServiceImpl implements OrderService {
   public void deliverOrder(Long orderId) {
     OrderEntity order = orderRepository.findById(orderId)
         .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
+    CurrentUser currentUser = securityUtils.getCurrentUser();
+    if (!order.getUser().getId().equals(currentUser.id()) && !securityUtils.isAdmin()) {
+      throw new AccessDeniedException("Access denied");
+    }
     order.markAsDelivered();
     orderRepository.save(order);
   }
@@ -113,6 +138,10 @@ public class OrderServiceImpl implements OrderService {
   public void shipOrder(Long orderId) {
     OrderEntity order = orderRepository.findById(orderId)
         .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
+    CurrentUser currentUser = securityUtils.getCurrentUser();
+    if (!order.getUser().getId().equals(currentUser.id()) && !securityUtils.isAdmin()) {
+      throw new AccessDeniedException("Access denied");
+    }
     order.markAsShipped();
     orderRepository.save(order);
   }
