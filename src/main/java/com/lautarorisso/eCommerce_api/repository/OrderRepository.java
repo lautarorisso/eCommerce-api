@@ -1,16 +1,14 @@
 package com.lautarorisso.eCommerce_api.repository;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.lautarorisso.eCommerce_api.enums.OrderStatus;
 import com.lautarorisso.eCommerce_api.model.OrderEntity;
 
 public interface OrderRepository extends JpaRepository<OrderEntity, Long> {
   boolean existsByUserId(Long userId);
 
-  List<OrderEntity> findByUserId(Long userId);
+  Page<OrderEntity> findByUserId(Long userId, Pageable pageable);
 
-  List<OrderEntity> findByStatus(OrderStatus status);
 }

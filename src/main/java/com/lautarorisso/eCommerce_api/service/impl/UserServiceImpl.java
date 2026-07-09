@@ -1,7 +1,7 @@
 package com.lautarorisso.eCommerce_api.service.impl;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -43,8 +43,8 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public List<UserDto> getAllUsers() {
-    return userRepository.findAll().stream().map(userMapper::toDto).toList();
+  public Page<UserDto> getAllUsers(Pageable pageable) {
+    return userRepository.findAll(pageable).map(userMapper::toDto);
   }
 
   @Override

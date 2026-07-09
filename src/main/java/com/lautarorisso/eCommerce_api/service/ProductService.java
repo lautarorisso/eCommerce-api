@@ -1,6 +1,7 @@
 package com.lautarorisso.eCommerce_api.service;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import com.lautarorisso.eCommerce_api.dto.request.CreateProductRequest;
 import com.lautarorisso.eCommerce_api.dto.request.UpdateProductRequest;
@@ -11,7 +12,7 @@ public interface ProductService {
 
   ProductDto getProductById(Long productId);
 
-  List<ProductDto> getAllProducts();
+  Page<ProductDto> getAllProducts(Pageable pageable);
 
   ProductDto updateProduct(Long productId, UpdateProductRequest request);
 

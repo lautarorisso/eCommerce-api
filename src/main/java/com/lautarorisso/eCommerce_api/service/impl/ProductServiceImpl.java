@@ -1,7 +1,7 @@
 package com.lautarorisso.eCommerce_api.service.impl;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.lautarorisso.eCommerce_api.dto.request.CreateProductRequest;
@@ -46,8 +46,8 @@ public class ProductServiceImpl implements ProductService {
   }
 
   @Override
-  public List<ProductDto> getAllProducts() {
-    return productRepository.findAll().stream().map(productMapper::toDto).toList();
+  public Page<ProductDto> getAllProducts(Pageable pageable) {
+    return productRepository.findAll(pageable).map(productMapper::toDto);
   }
 
   @Override

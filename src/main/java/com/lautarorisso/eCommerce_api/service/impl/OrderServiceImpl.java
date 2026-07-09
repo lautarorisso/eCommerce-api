@@ -2,6 +2,8 @@ package com.lautarorisso.eCommerce_api.service.impl;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,8 +56,8 @@ public class OrderServiceImpl implements OrderService {
   }
 
   @Override
-  public List<OrderDto> getAllOrders(Long userId) {
-    return orderRepository.findByUserId(userId).stream().map(orderMapper::toDto).toList();
+  public Page<OrderDto> getAllOrders(Long userId, Pageable pageable) {
+    return orderRepository.findByUserId(userId, pageable).map(orderMapper::toDto);
   }
 
   @Override
