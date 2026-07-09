@@ -14,8 +14,10 @@ import com.lautarorisso.eCommerce_api.exceptions.DuplicateResourceException;
 import com.lautarorisso.eCommerce_api.exceptions.InvalidOperationException;
 import com.lautarorisso.eCommerce_api.exceptions.ResourceNotFoundException;
 import com.lautarorisso.eCommerce_api.mapper.ProductMapper;
+import com.lautarorisso.eCommerce_api.model.CategoryEntity;
 import com.lautarorisso.eCommerce_api.model.ProductEntity;
 import com.lautarorisso.eCommerce_api.repository.CartItemRepository;
+import com.lautarorisso.eCommerce_api.repository.CategoryRepository;
 import com.lautarorisso.eCommerce_api.repository.OrderItemRepository;
 import com.lautarorisso.eCommerce_api.repository.ProductRepository;
 import com.lautarorisso.eCommerce_api.service.ProductService;
@@ -31,13 +33,17 @@ public class ProductServiceImpl implements ProductService {
   private final ProductRepository productRepository;
   private final CartItemRepository cartItemRepository;
   private final OrderItemRepository orderItemRepository;
+  private final CategoryRepository categoryRepository;
 
   @Override
   public ProductDto createProduct(CreateProductRequest request) {
     if (productRepository.existsByName(request.name())) {
       throw new DuplicateResourceException("Product", "name", request.name());
     }
+    CategoryEntity category = categoryRepository.findById(request.categoryId())
+        .orElseThrow(() -> new ResourceNotFoundException("Category", request.categoryId()));
     ProductEntity product = productMapper.toEntity(request);
+    product.changeCategory(category);
     ProductEntity savedProduct = productRepository.save(product);
     return productMapper.toDto(savedProduct);
   }
@@ -51,11 +57,12 @@ public class ProductServiceImpl implements ProductService {
 
   @Override
   public Page<ProductDto> getAllProducts(String search, BigDecimal minPrice, BigDecimal maxPrice, Boolean inStock,
-      Pageable pageable) {
+      Long categoryId, Pageable pageable) {
     Specification<ProductEntity> spec = Specification
         .where(ProductSpecification.nameContains(search))
         .and(ProductSpecification.priceBetween(minPrice, maxPrice))
-        .and(ProductSpecification.inStock(inStock));
+        .and(ProductSpecification.inStock(inStock))
+        .and(ProductSpecification.categoryIdEquals(categoryId));
     return productRepository.findAll(spec, pageable).map(productMapper::toDto);
   }
 
@@ -71,6 +78,11 @@ public class ProductServiceImpl implements ProductService {
     }
     if (request.unitPrice() != null) {
       product.updatePrice(request.unitPrice());
+    }
+    if (request.categoryId() != null) {
+      CategoryEntity category = categoryRepository.findById(request.categoryId())
+          .orElseThrow(() -> new ResourceNotFoundException("Category", request.categoryId()));
+      product.changeCategory(category);
     }
     ProductEntity updatedProduct = productRepository.save(product);
     return productMapper.toDto(updatedProduct);

@@ -4,9 +4,12 @@ import java.math.BigDecimal;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import lombok.AccessLevel;
@@ -29,6 +32,10 @@ public class ProductEntity {
   private BigDecimal unitPrice;
   @Column(nullable = false)
   private Integer stock;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "category_id")
+  private CategoryEntity category;
+
   @Version
   private Long version;
 
@@ -51,6 +58,10 @@ public class ProductEntity {
       throw new IllegalArgumentException("Description cannot be empty");
     }
     this.description = description;
+  }
+
+  public void changeCategory(CategoryEntity category) {
+    this.category = category;
   }
 
   public void updatePrice(BigDecimal newPrice) {

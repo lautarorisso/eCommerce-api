@@ -15,7 +15,7 @@ public interface ProductService {
   ProductDto getProductById(Long productId);
 
   Page<ProductDto> getAllProducts(String search, BigDecimal minPrice, BigDecimal maxPrice, Boolean inStock,
-      Pageable pageable);
+      Long categoryId, Pageable pageable);
 
   ProductDto updateProduct(Long productId, UpdateProductRequest request);
 

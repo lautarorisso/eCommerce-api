@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 import org.springframework.data.jpa.domain.Specification;
 
+import com.lautarorisso.eCommerce_api.model.CategoryEntity;
 import com.lautarorisso.eCommerce_api.model.ProductEntity;
 
 public class ProductSpecification {
@@ -29,6 +30,15 @@ public class ProductSpecification {
         return cb.greaterThanOrEqualTo(root.get("unitPrice"), min);
       }
       return cb.between(root.get("unitPrice"), min, max);
+    };
+  }
+
+  public static Specification<ProductEntity> categoryIdEquals(Long categoryId) {
+    return (root, query, cb) -> {
+      if (categoryId == null) {
+        return null;
+      }
+      return cb.equal(root.get("category").get("id"), categoryId);
     };
   }
 

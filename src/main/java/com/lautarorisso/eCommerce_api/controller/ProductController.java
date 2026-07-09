@@ -39,8 +39,9 @@ public class ProductController {
       @RequestParam(required = false) BigDecimal minPrice,
       @RequestParam(required = false) BigDecimal maxPrice,
       @RequestParam(required = false) Boolean inStock,
+      @RequestParam(required = false) Long categoryId,
       @PageableDefault(size = 20) Pageable pageable) {
-    return productService.getAllProducts(search, minPrice, maxPrice, inStock, pageable);
+    return productService.getAllProducts(search, minPrice, maxPrice, inStock, categoryId, pageable);
   }
 
   @GetMapping("/{productId}")
