@@ -2,11 +2,13 @@ package com.lautarorisso.eCommerce_api.service.impl;
 
 import java.util.List;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.lautarorisso.eCommerce_api.dto.request.CreateUserRequest;
 import com.lautarorisso.eCommerce_api.dto.request.UpdateUserRequest;
 import com.lautarorisso.eCommerce_api.dto.response.UserDto;
+import com.lautarorisso.eCommerce_api.enums.Role;
 import com.lautarorisso.eCommerce_api.exceptions.DuplicateResourceException;
 import com.lautarorisso.eCommerce_api.exceptions.InvalidOperationException;
 import com.lautarorisso.eCommerce_api.exceptions.ResourceNotFoundException;
@@ -26,6 +28,7 @@ public class UserServiceImpl implements UserService {
   private final UserRepository userRepository;
   private final CartRepository cartRepository;
   private final OrderRepository orderRepository;
+  private final PasswordEncoder passwordEncoder;
   private final UserMapper userMapper;
 
   @Override
@@ -33,7 +36,8 @@ public class UserServiceImpl implements UserService {
     if (userRepository.existsByEmail(request.email())) {
       throw new DuplicateResourceException("User", "email", request.email());
     }
-    UserEntity user = new UserEntity(request.username(), request.email(), request.password());
+    String hashedPassword = passwordEncoder.encode(request.password());
+    UserEntity user = new UserEntity(request.username(), request.email(), hashedPassword, Role.USER);
     UserEntity savedUser = userRepository.save(user);
     return userMapper.toDto(savedUser);
   }
