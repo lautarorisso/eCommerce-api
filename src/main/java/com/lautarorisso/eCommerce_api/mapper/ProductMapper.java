@@ -10,7 +10,5 @@ import com.lautarorisso.eCommerce_api.model.ProductEntity;
 public interface ProductMapper {
   ProductDto toDto(ProductEntity product);
 
-  ProductEntity toEntity(ProductDto dto);
-
   ProductEntity toEntity(CreateProductRequest request);
 }

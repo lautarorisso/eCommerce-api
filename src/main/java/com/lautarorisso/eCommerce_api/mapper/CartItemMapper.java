@@ -11,8 +11,4 @@ public interface CartItemMapper {
   @Mapping(source = "product.id", target = "productId")
   @Mapping(source = "product.name", target = "productName")
   CartItemDto toDto(CartItemEntity item);
-
-  @Mapping(target = "cart", ignore = true)
-  @Mapping(target = "product", ignore = true)
-  CartItemEntity toEntity(CartItemDto dto);
 }

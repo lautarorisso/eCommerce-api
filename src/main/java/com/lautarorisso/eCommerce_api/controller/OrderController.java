@@ -1,5 +1,7 @@
 package com.lautarorisso.eCommerce_api.controller;
 
+import java.math.BigDecimal;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.lautarorisso.eCommerce_api.dto.response.OrderDto;
+import com.lautarorisso.eCommerce_api.enums.OrderStatus;
 import com.lautarorisso.eCommerce_api.service.OrderService;
 
 import lombok.RequiredArgsConstructor;
@@ -32,8 +35,13 @@ public class OrderController {
   }
 
   @GetMapping("/user/{userId}")
-  public Page<OrderDto> getAllOrders(@PathVariable Long userId, @PageableDefault(size = 20) Pageable pageable) {
-    return orderService.getAllOrders(userId, pageable);
+  public Page<OrderDto> getAllOrders(
+      @PathVariable Long userId,
+      @RequestParam(required = false) OrderStatus status,
+      @RequestParam(required = false) BigDecimal minTotal,
+      @RequestParam(required = false) BigDecimal maxTotal,
+      @PageableDefault(size = 20) Pageable pageable) {
+    return orderService.getAllOrders(userId, status, minTotal, maxTotal, pageable);
   }
 
   @GetMapping("/{orderId}")

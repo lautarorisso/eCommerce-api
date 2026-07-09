@@ -1,7 +1,10 @@
 package com.lautarorisso.eCommerce_api.service.impl;
 
+import java.math.BigDecimal;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.lautarorisso.eCommerce_api.dto.request.CreateProductRequest;
@@ -16,6 +19,7 @@ import com.lautarorisso.eCommerce_api.repository.CartItemRepository;
 import com.lautarorisso.eCommerce_api.repository.OrderItemRepository;
 import com.lautarorisso.eCommerce_api.repository.ProductRepository;
 import com.lautarorisso.eCommerce_api.service.ProductService;
+import com.lautarorisso.eCommerce_api.specification.ProductSpecification;
 
 import lombok.RequiredArgsConstructor;
 
@@ -46,8 +50,13 @@ public class ProductServiceImpl implements ProductService {
   }
 
   @Override
-  public Page<ProductDto> getAllProducts(Pageable pageable) {
-    return productRepository.findAll(pageable).map(productMapper::toDto);
+  public Page<ProductDto> getAllProducts(String search, BigDecimal minPrice, BigDecimal maxPrice, Boolean inStock,
+      Pageable pageable) {
+    Specification<ProductEntity> spec = Specification
+        .where(ProductSpecification.nameContains(search))
+        .and(ProductSpecification.priceBetween(minPrice, maxPrice))
+        .and(ProductSpecification.inStock(inStock));
+    return productRepository.findAll(spec, pageable).map(productMapper::toDto);
   }
 
   @Override

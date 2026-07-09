@@ -6,11 +6,12 @@ import org.springframework.data.domain.Pageable;
 import com.lautarorisso.eCommerce_api.dto.request.CreateUserRequest;
 import com.lautarorisso.eCommerce_api.dto.request.UpdateUserRequest;
 import com.lautarorisso.eCommerce_api.dto.response.UserDto;
+import com.lautarorisso.eCommerce_api.enums.Role;
 
 public interface UserService {
   UserDto createUser(CreateUserRequest request);
 
-  Page<UserDto> getAllUsers(Pageable pageable);
+  Page<UserDto> getAllUsers(String search, Role role, Pageable pageable);
 
   UserDto getUserById(Long userId);
 
@@ -19,6 +20,4 @@ public interface UserService {
   void deleteUser(Long userId);
 
   UserDto getUserByEmail(String email);
-
-  boolean existsByEmail(String email);
 }

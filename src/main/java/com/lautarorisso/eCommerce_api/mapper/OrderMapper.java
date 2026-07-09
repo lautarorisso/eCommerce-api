@@ -9,7 +9,4 @@ import com.lautarorisso.eCommerce_api.model.OrderEntity;
 @Mapper(componentModel = "spring", uses = OrderItemMapper.class)
 public interface OrderMapper {
   OrderDto toDto(OrderEntity order);
-
-  @Mapping(target = "user", ignore = true)
-  OrderEntity toEntity(OrderDto dto);
 }

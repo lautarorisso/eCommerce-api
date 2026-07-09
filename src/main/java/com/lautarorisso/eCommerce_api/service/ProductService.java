@@ -1,5 +1,7 @@
 package com.lautarorisso.eCommerce_api.service;
 
+import java.math.BigDecimal;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -12,7 +14,8 @@ public interface ProductService {
 
   ProductDto getProductById(Long productId);
 
-  Page<ProductDto> getAllProducts(Pageable pageable);
+  Page<ProductDto> getAllProducts(String search, BigDecimal minPrice, BigDecimal maxPrice, Boolean inStock,
+      Pageable pageable);
 
   ProductDto updateProduct(Long productId, UpdateProductRequest request);
 

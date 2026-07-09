@@ -1,14 +1,17 @@
 package com.lautarorisso.eCommerce_api.service.impl;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.lautarorisso.eCommerce_api.dto.response.OrderDto;
+import com.lautarorisso.eCommerce_api.enums.OrderStatus;
 import com.lautarorisso.eCommerce_api.exceptions.InsufficientResourcesException;
 import com.lautarorisso.eCommerce_api.exceptions.InvalidOperationException;
 import com.lautarorisso.eCommerce_api.exceptions.ResourceNotFoundException;
@@ -24,6 +27,7 @@ import com.lautarorisso.eCommerce_api.repository.ProductRepository;
 import com.lautarorisso.eCommerce_api.security.CurrentUser;
 import com.lautarorisso.eCommerce_api.security.SecurityUtils;
 import com.lautarorisso.eCommerce_api.service.OrderService;
+import com.lautarorisso.eCommerce_api.specification.OrderSpecification;
 
 import lombok.RequiredArgsConstructor;
 
@@ -41,6 +45,10 @@ public class OrderServiceImpl implements OrderService {
   @Override
   public OrderDto createOrder(Long cartId) {
     CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new ResourceNotFoundException("Cart", cartId));
+    CurrentUser currentUser = securityUtils.getCurrentUser();
+    if (!cart.getUser().getId().equals(currentUser.id()) && !securityUtils.isAdmin()) {
+      throw new AccessDeniedException("Access denied");
+    }
     if (cart.isEmpty()) {
       throw new InvalidOperationException("Cart is empty");
     }
@@ -59,13 +67,19 @@ public class OrderServiceImpl implements OrderService {
     return orderMapper.toDto(order);
   }
 
+  @Transactional(readOnly = true)
   @Override
-  public Page<OrderDto> getAllOrders(Long userId, Pageable pageable) {
+  public Page<OrderDto> getAllOrders(Long userId, OrderStatus status, BigDecimal minTotal, BigDecimal maxTotal,
+      Pageable pageable) {
     CurrentUser currentUser = securityUtils.getCurrentUser();
     if (!currentUser.id().equals(userId) && !securityUtils.isAdmin()) {
       throw new AccessDeniedException("Access denied");
     }
-    return orderRepository.findByUserId(userId, pageable).map(orderMapper::toDto);
+    Specification<OrderEntity> spec = Specification
+        .where(OrderSpecification.userIdEquals(userId))
+        .and(OrderSpecification.statusEquals(status))
+        .and(OrderSpecification.totalBetween(minTotal, maxTotal));
+    return orderRepository.findAll(spec, pageable).map(orderMapper::toDto);
   }
 
   @Transactional(readOnly = true)
@@ -90,13 +104,6 @@ public class OrderServiceImpl implements OrderService {
       throw new AccessDeniedException("Access denied");
     }
     order.cancel();
-    List<ProductEntity> products = order.getItems().stream()
-        .map(item -> {
-          item.getProduct().restock(item.getQuantity());
-          return item.getProduct();
-        })
-        .toList();
-    productRepository.saveAll(products);
     orderRepository.save(order);
   }
 

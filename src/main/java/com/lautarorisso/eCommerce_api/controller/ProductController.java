@@ -1,5 +1,7 @@
 package com.lautarorisso.eCommerce_api.controller;
 
+import java.math.BigDecimal;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -32,8 +34,13 @@ public class ProductController {
   private final ProductService productService;
 
   @GetMapping
-  public Page<ProductDto> getAllProducts(@PageableDefault(size = 20) Pageable pageable) {
-    return productService.getAllProducts(pageable);
+  public Page<ProductDto> getAllProducts(
+      @RequestParam(required = false) String search,
+      @RequestParam(required = false) BigDecimal minPrice,
+      @RequestParam(required = false) BigDecimal maxPrice,
+      @RequestParam(required = false) Boolean inStock,
+      @PageableDefault(size = 20) Pageable pageable) {
+    return productService.getAllProducts(search, minPrice, maxPrice, inStock, pageable);
   }
 
   @GetMapping("/{productId}")

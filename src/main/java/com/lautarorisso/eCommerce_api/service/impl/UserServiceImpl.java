@@ -2,6 +2,7 @@ package com.lautarorisso.eCommerce_api.service.impl;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,7 @@ import com.lautarorisso.eCommerce_api.repository.CartRepository;
 import com.lautarorisso.eCommerce_api.repository.OrderRepository;
 import com.lautarorisso.eCommerce_api.repository.UserRepository;
 import com.lautarorisso.eCommerce_api.service.UserService;
+import com.lautarorisso.eCommerce_api.specification.UserSpecification;
 
 import lombok.RequiredArgsConstructor;
 
@@ -43,8 +45,11 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public Page<UserDto> getAllUsers(Pageable pageable) {
-    return userRepository.findAll(pageable).map(userMapper::toDto);
+  public Page<UserDto> getAllUsers(String search, Role role, Pageable pageable) {
+    Specification<UserEntity> spec = Specification
+        .where(UserSpecification.usernameOrEmailContains(search))
+        .and(UserSpecification.roleEquals(role));
+    return userRepository.findAll(spec, pageable).map(userMapper::toDto);
   }
 
   @Override
@@ -92,8 +97,4 @@ public class UserServiceImpl implements UserService {
     return userMapper.toDto(user);
   }
 
-  @Override
-  public boolean existsByEmail(String email) {
-    return userRepository.existsByEmail(email);
-  }
 }

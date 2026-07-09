@@ -10,7 +10,4 @@ import com.lautarorisso.eCommerce_api.model.CartEntity;
 public interface CartMapper {
   @Mapping(target = "total", expression = "java(cart.calculateTotal())")
   CartDto toDto(CartEntity cart);
-
-  @Mapping(target = "user", ignore = true)
-  CartEntity toEntity(CartDto dto);
 }

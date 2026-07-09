@@ -7,6 +7,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,13 +31,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       return;
     }
     String token = header.substring(7);
-    if (!jwtService.isValid(token)) {
-      chain.doFilter(request, response);
+    Claims claims;
+    try {
+      claims = jwtService.getClaims(token);
+    } catch (JwtException e) {
+      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+      response.setContentType("application/json");
+      response.getWriter().write("{\"error\":\"Invalid or expired token\"}");
       return;
     }
-    String email = jwtService.extractEmail(token);
-    Long userId = jwtService.extractUserId(token);
-    String role = jwtService.extractRoles(token).get(0);
+    String email = claims.getSubject();
+    Long userId = claims.get("userId", Long.class);
+    String role = claims.get("role", String.class);
     var userDetails = userDetailsService.loadUserByUsername(email);
     var authentication = new UsernamePasswordAuthenticationToken(
         userDetails, null, userDetails.getAuthorities());
