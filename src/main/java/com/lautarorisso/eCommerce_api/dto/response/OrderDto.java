@@ -5,5 +5,19 @@ import java.util.List;
 
 import com.lautarorisso.eCommerce_api.enums.OrderStatus;
 
-public record OrderDto(Long id, List<OrderItemDto> items, BigDecimal totalPrice, OrderStatus status) {
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Order information")
+public record OrderDto(
+    @Schema(description = "Order ID", example = "1")
+    Long id,
+
+    @Schema(description = "Items in the order")
+    List<OrderItemDto> items,
+
+    @Schema(description = "Total price", example = "59.98")
+    BigDecimal totalPrice,
+
+    @Schema(description = "Order status", example = "PENDING")
+    OrderStatus status) {
 }

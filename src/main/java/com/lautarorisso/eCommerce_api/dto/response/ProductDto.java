@@ -2,6 +2,28 @@ package com.lautarorisso.eCommerce_api.dto.response;
 
 import java.math.BigDecimal;
 
-public record ProductDto(Long id, String name, String description, BigDecimal unitPrice, Integer stock,
-    Long categoryId, String categoryName) {
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "Product information")
+public record ProductDto(
+    @Schema(description = "Product ID", example = "1")
+    Long id,
+
+    @Schema(description = "Product name", example = "Wireless Mouse")
+    String name,
+
+    @Schema(description = "Product description", example = "Ergonomic wireless mouse with USB receiver")
+    String description,
+
+    @Schema(description = "Unit price", example = "29.99")
+    BigDecimal unitPrice,
+
+    @Schema(description = "Available stock", example = "100")
+    Integer stock,
+
+    @Schema(description = "Category ID", example = "1")
+    Long categoryId,
+
+    @Schema(description = "Category name", example = "Electronics")
+    String categoryName) {
 }

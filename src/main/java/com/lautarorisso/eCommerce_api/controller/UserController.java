@@ -21,17 +21,28 @@ import com.lautarorisso.eCommerce_api.dto.response.UserDto;
 import com.lautarorisso.eCommerce_api.enums.Role;
 import com.lautarorisso.eCommerce_api.service.UserService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
+@Tag(name = "Users", description = "Manage users (admin only)")
 public class UserController {
 
   private final UserService userService;
 
   @GetMapping
+  @Operation(summary = "Get all users", description = "Returns a paginated list of users with optional filters (admin only)")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Users found"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Forbidden — requires ADMIN role")
+  })
   public Page<UserDto> getAllUsers(
       @RequestParam(required = false) String search,
       @RequestParam(required = false) Role role,
@@ -40,28 +51,66 @@ public class UserController {
   }
 
   @GetMapping("/{userId}")
+  @Operation(summary = "Get user by ID", description = "Returns a single user (admin only)")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "User found"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Forbidden — requires ADMIN role"),
+      @ApiResponse(responseCode = "404", description = "User not found")
+  })
   public UserDto getUserById(@PathVariable Long userId) {
     return userService.getUserById(userId);
   }
 
   @GetMapping("/email/{email}")
+  @Operation(summary = "Get user by email", description = "Returns a single user by email (admin only)")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "User found"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Forbidden — requires ADMIN role"),
+      @ApiResponse(responseCode = "404", description = "User not found")
+  })
   public UserDto getUserByEmail(@PathVariable String email) {
     return userService.getUserByEmail(email);
   }
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
+  @Operation(summary = "Create a user", description = "Creates a new user (admin only)")
+  @ApiResponses({
+      @ApiResponse(responseCode = "201", description = "User created"),
+      @ApiResponse(responseCode = "400", description = "Invalid input"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Forbidden — requires ADMIN role"),
+      @ApiResponse(responseCode = "409", description = "Email already in use")
+  })
   public UserDto createUser(@Valid @RequestBody CreateUserRequest request) {
     return userService.createUser(request);
   }
 
   @PutMapping("/{userId}")
+  @Operation(summary = "Update a user", description = "Updates a user by ID (admin only)")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "User updated"),
+      @ApiResponse(responseCode = "400", description = "Invalid input"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Forbidden — requires ADMIN role"),
+      @ApiResponse(responseCode = "404", description = "User not found"),
+      @ApiResponse(responseCode = "409", description = "Email already in use")
+  })
   public UserDto updateUser(@PathVariable Long userId, @Valid @RequestBody UpdateUserRequest request) {
     return userService.updateUser(userId, request);
   }
 
   @DeleteMapping("/{userId}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
+  @Operation(summary = "Delete a user", description = "Deletes a user by ID (admin only)")
+  @ApiResponses({
+      @ApiResponse(responseCode = "204", description = "User deleted"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Forbidden — requires ADMIN role"),
+      @ApiResponse(responseCode = "404", description = "User not found")
+  })
   public void deleteUser(@PathVariable Long userId) {
     userService.deleteUser(userId);
   }
