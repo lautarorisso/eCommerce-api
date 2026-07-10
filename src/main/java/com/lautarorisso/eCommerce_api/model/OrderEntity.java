@@ -38,7 +38,7 @@ public class OrderEntity {
   @ManyToOne
   @JoinColumn(name = "user_id", nullable = false)
   private UserEntity user;
-  @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
   private List<OrderItemEntity> items;
   @Column(nullable = false, precision = 10, scale = 2)
   private BigDecimal totalPrice;

@@ -1,5 +1,7 @@
 package com.lautarorisso.eCommerce_api.model;
 
+import java.util.regex.Pattern;
+
 import com.lautarorisso.eCommerce_api.enums.Role;
 
 import jakarta.persistence.Column;
@@ -19,6 +21,8 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "users")
 public class UserEntity {
+  private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
+
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -37,7 +41,7 @@ public class UserEntity {
       throw new IllegalArgumentException("Username cannot be empty");
     }
 
-    if (email == null || email.isBlank() || !email.contains("@")) {
+    if (email == null || email.isBlank() || !EMAIL_PATTERN.matcher(email).matches()) {
       throw new IllegalArgumentException("Invalid email");
     }
 
@@ -66,7 +70,7 @@ public class UserEntity {
       throw new IllegalArgumentException("Email cannot be empty");
     }
 
-    if (!newEmail.contains("@")) {
+    if (!EMAIL_PATTERN.matcher(newEmail).matches()) {
       throw new IllegalArgumentException("Invalid email");
     }
 

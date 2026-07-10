@@ -76,7 +76,10 @@ public class ProductServiceImpl implements ProductService {
   public ProductDto updateProduct(Long productId, UpdateProductRequest request) {
     ProductEntity product = productRepository.findById(productId)
         .orElseThrow(() -> new ResourceNotFoundException("Product", productId));
-    if (request.name() != null) {
+    if (request.name() != null && !request.name().equals(product.getName())) {
+      if (productRepository.existsByName(request.name())) {
+        throw new DuplicateResourceException("Product", "name", request.name());
+      }
       product.changeName(request.name());
     }
     if (request.description() != null) {
