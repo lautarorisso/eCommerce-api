@@ -2,7 +2,10 @@ package com.lautarorisso.eCommerce_api.security;
 
 import java.io.IOException;
 
+import java.util.List;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -20,7 +23,6 @@ import lombok.RequiredArgsConstructor;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private final JwtService jwtService;
-  private final CustomUserDetailsService userDetailsService;
 
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
@@ -43,9 +45,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     String email = claims.getSubject();
     Long userId = claims.get("userId", Long.class);
     String role = claims.get("role", String.class);
-    var userDetails = userDetailsService.loadUserByUsername(email);
     var authentication = new UsernamePasswordAuthenticationToken(
-        userDetails, null, userDetails.getAuthorities());
+        email, null, List.of(new SimpleGrantedAuthority("ROLE_" + role)));
     authentication.setDetails(new CurrentUser(userId, email, role));
     SecurityContextHolder.getContext().setAuthentication(authentication);
     chain.doFilter(request, response);

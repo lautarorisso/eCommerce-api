@@ -45,6 +45,9 @@ public class OrderServiceImpl implements OrderService {
   @Override
   public OrderDto createOrder(Long cartId) {
     CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new ResourceNotFoundException("Cart", cartId));
+    if (!cart.isActive()) {
+      throw new InvalidOperationException("Cart is not active");
+    }
     CurrentUser currentUser = securityUtils.getCurrentUser();
     if (!cart.getUser().getId().equals(currentUser.id()) && !securityUtils.isAdmin()) {
       throw new AccessDeniedException("Access denied");
@@ -134,19 +137,6 @@ public class OrderServiceImpl implements OrderService {
 
   @Transactional
   @Override
-  public void deliverOrder(Long orderId) {
-    OrderEntity order = orderRepository.findById(orderId)
-        .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
-    CurrentUser currentUser = securityUtils.getCurrentUser();
-    if (!order.getUser().getId().equals(currentUser.id()) && !securityUtils.isAdmin()) {
-      throw new AccessDeniedException("Access denied");
-    }
-    order.markAsDelivered();
-    orderRepository.save(order);
-  }
-
-  @Transactional
-  @Override
   public void shipOrder(Long orderId) {
     OrderEntity order = orderRepository.findById(orderId)
         .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
@@ -155,6 +145,19 @@ public class OrderServiceImpl implements OrderService {
       throw new AccessDeniedException("Access denied");
     }
     order.markAsShipped();
+    orderRepository.save(order);
+  }
+
+  @Transactional
+  @Override
+  public void deliverOrder(Long orderId) {
+    OrderEntity order = orderRepository.findById(orderId)
+        .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
+    CurrentUser currentUser = securityUtils.getCurrentUser();
+    if (!order.getUser().getId().equals(currentUser.id()) && !securityUtils.isAdmin()) {
+      throw new AccessDeniedException("Access denied");
+    }
+    order.markAsDelivered();
     orderRepository.save(order);
   }
 }

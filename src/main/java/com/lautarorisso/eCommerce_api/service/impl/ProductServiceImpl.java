@@ -92,6 +92,7 @@ public class ProductServiceImpl implements ProductService {
     return productMapper.toDto(updatedProduct);
   }
 
+  @Transactional
   @Override
   public void deleteProduct(Long productId) {
     if (!productRepository.existsById(productId)) {
@@ -106,6 +107,7 @@ public class ProductServiceImpl implements ProductService {
     productRepository.deleteById(productId);
   }
 
+  @Transactional
   @Override
   public void restockProduct(Long productId, int quantity) {
     ProductEntity product = productRepository.findById(productId)

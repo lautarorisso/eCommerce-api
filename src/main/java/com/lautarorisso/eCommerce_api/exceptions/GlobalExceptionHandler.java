@@ -13,7 +13,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import jakarta.validation.ConstraintViolationException;
 
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -67,6 +70,31 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
     return ResponseEntity.status(HttpStatus.FORBIDDEN)
         .body(new ErrorResponse(HttpStatus.FORBIDDEN.value(), ex.getMessage()));
+  }
+
+  @ExceptionHandler(IllegalStateException.class)
+  public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException ex) {
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
+  }
+
+  @ExceptionHandler(HttpMessageNotReadableException.class)
+  public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Malformed JSON request body"));
+  }
+
+  @ExceptionHandler(MissingServletRequestParameterException.class)
+  public ResponseEntity<ErrorResponse> handleMissingParam(MissingServletRequestParameterException ex) {
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
+  }
+
+  @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+  public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(),
+            "Invalid value for parameter '%s': %s".formatted(ex.getName(), ex.getValue())));
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)

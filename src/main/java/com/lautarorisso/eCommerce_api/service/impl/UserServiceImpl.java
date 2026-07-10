@@ -15,6 +15,7 @@ import com.lautarorisso.eCommerce_api.exceptions.DuplicateResourceException;
 import com.lautarorisso.eCommerce_api.exceptions.InvalidOperationException;
 import com.lautarorisso.eCommerce_api.exceptions.ResourceNotFoundException;
 import com.lautarorisso.eCommerce_api.mapper.UserMapper;
+import com.lautarorisso.eCommerce_api.model.CartEntity;
 import com.lautarorisso.eCommerce_api.model.UserEntity;
 import com.lautarorisso.eCommerce_api.repository.CartRepository;
 import com.lautarorisso.eCommerce_api.repository.OrderRepository;
@@ -36,6 +37,7 @@ public class UserServiceImpl implements UserService {
   private final UserMapper userMapper;
   private final SecurityUtils securityUtils;
 
+  @Transactional
   @Override
   public UserDto createUser(CreateUserRequest request) {
     if (userRepository.existsByEmail(request.email())) {
@@ -44,6 +46,7 @@ public class UserServiceImpl implements UserService {
     String hashedPassword = passwordEncoder.encode(request.password());
     UserEntity user = new UserEntity(request.username(), request.email(), hashedPassword, Role.USER);
     UserEntity savedUser = userRepository.save(user);
+    cartRepository.save(new CartEntity(savedUser));
     return userMapper.toDto(savedUser);
   }
 
@@ -80,6 +83,7 @@ public class UserServiceImpl implements UserService {
     return userMapper.toDto(updatedUser);
   }
 
+  @Transactional
   @Override
   public void deleteUser(Long userId) {
     if (!userRepository.existsById(userId)) {

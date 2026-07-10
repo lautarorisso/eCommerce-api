@@ -24,6 +24,7 @@ public class CategoryServiceImpl implements CategoryService {
   private final CategoryRepository categoryRepository;
   private final CategoryMapper categoryMapper;
 
+  @Transactional
   @Override
   public CategoryDto createCategory(CreateCategoryRequest request) {
     if (categoryRepository.existsByName(request.name())) {
@@ -59,6 +60,7 @@ public class CategoryServiceImpl implements CategoryService {
     return categoryMapper.toDto(categoryRepository.save(entity));
   }
 
+  @Transactional
   @Override
   public void deleteCategory(Long id) {
     if (!categoryRepository.existsById(id)) {
