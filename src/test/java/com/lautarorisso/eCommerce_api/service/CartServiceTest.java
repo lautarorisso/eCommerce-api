@@ -17,9 +17,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.lautarorisso.eCommerce_api.dto.response.CartDto;
+import com.lautarorisso.eCommerce_api.enums.CartStatus;
 import com.lautarorisso.eCommerce_api.exceptions.InsufficientResourcesException;
 import com.lautarorisso.eCommerce_api.exceptions.InvalidOperationException;
-import com.lautarorisso.eCommerce_api.exceptions.ResourceNotFoundException;
 import com.lautarorisso.eCommerce_api.mapper.CartMapper;
 import com.lautarorisso.eCommerce_api.model.CartEntity;
 import com.lautarorisso.eCommerce_api.model.CartItemEntity;
@@ -27,6 +27,7 @@ import com.lautarorisso.eCommerce_api.model.ProductEntity;
 import com.lautarorisso.eCommerce_api.model.UserEntity;
 import com.lautarorisso.eCommerce_api.repository.CartRepository;
 import com.lautarorisso.eCommerce_api.repository.ProductRepository;
+import com.lautarorisso.eCommerce_api.repository.UserRepository;
 import com.lautarorisso.eCommerce_api.security.CurrentUser;
 import com.lautarorisso.eCommerce_api.security.SecurityUtils;
 import com.lautarorisso.eCommerce_api.service.impl.CartServiceImpl;
@@ -39,6 +40,9 @@ class CartServiceTest {
 
   @Mock
   private ProductRepository productRepository;
+
+  @Mock
+  private UserRepository userRepository;
 
   @Mock
   private CartMapper cartMapper;
@@ -65,36 +69,7 @@ class CartServiceTest {
 
     currentUser = new CurrentUser(1L, "user@example.com", "USER");
 
-    cartDto = new CartDto(1L, java.util.List.of(), com.lautarorisso.eCommerce_api.enums.CartStatus.ACTIVE,
-        BigDecimal.ZERO);
-  }
-
-  @Test
-  @DisplayName("getCartByUserId - should return existing cart")
-  void getCartByUserId_whenCartExists_returnsCart() {
-    var cart = new CartEntity(user);
-
-    when(securityUtils.getCurrentUser()).thenReturn(currentUser);
-    when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
-    when(cartMapper.toDto(cart)).thenReturn(cartDto);
-
-    var result = cartService.getCartByUserId(1L);
-
-    assertNotNull(result);
-    verify(cartRepository).findByUserId(1L);
-    verify(cartRepository, never()).save(any());
-  }
-
-  @Test
-  @DisplayName("getCartByUserId - should throw ResourceNotFoundException when no cart exists")
-  void getCartByUserId_whenNoCart_throwsException() {
-    when(securityUtils.getCurrentUser()).thenReturn(currentUser);
-    when(cartRepository.findByUserId(1L)).thenReturn(Optional.empty());
-
-    assertThrows(ResourceNotFoundException.class, () -> cartService.getCartByUserId(1L));
-
-    verify(cartRepository).findByUserId(1L);
-    verify(cartRepository, never()).save(any());
+    cartDto = new CartDto(1L, java.util.List.of(), CartStatus.ACTIVE, BigDecimal.ZERO);
   }
 
   @Test
@@ -128,58 +103,6 @@ class CartServiceTest {
   }
 
   @Test
-  @DisplayName("removeProduct - should remove item from cart")
-  void removeProduct_withValidData_removesItem() {
-    var cart = new CartEntity(user);
-    var item = new CartItemEntity(cart, product, 2, product.getUnitPrice());
-    cart.addItem(item);
-
-    when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
-    when(securityUtils.getCurrentUser()).thenReturn(currentUser);
-    when(cartMapper.toDto(cart)).thenReturn(cartDto);
-
-    var result = cartService.removeProduct(1L, 1L);
-
-    assertNotNull(result);
-    assertEquals(0, cart.getItems().size());
-    verify(cartRepository).save(cart);
-  }
-
-  @Test
-  @DisplayName("updateQuantity - should update item quantity")
-  void updateQuantity_withValidData_updatesQuantity() {
-    var cart = new CartEntity(user);
-    var item = new CartItemEntity(cart, product, 2, product.getUnitPrice());
-    cart.addItem(item);
-
-    when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
-    when(securityUtils.getCurrentUser()).thenReturn(currentUser);
-    when(cartMapper.toDto(cart)).thenReturn(cartDto);
-
-    var result = cartService.updateQuantity(1L, 1L, 5);
-
-    assertNotNull(result);
-    assertEquals(5, item.getQuantity());
-    verify(cartRepository).save(cart);
-  }
-
-  @Test
-  @DisplayName("clearCart - should clear all items")
-  void clearCart_withValidData_clearsItems() {
-    var cart = new CartEntity(user);
-    var item = new CartItemEntity(cart, product, 2, product.getUnitPrice());
-    cart.addItem(item);
-
-    when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
-    when(securityUtils.getCurrentUser()).thenReturn(currentUser);
-
-    cartService.clearCart(1L);
-
-    assertEquals(0, cart.getItems().size());
-    verify(cartRepository).save(cart);
-  }
-
-  @Test
   @DisplayName("addProduct - should throw InvalidOperationException when cart is not active")
   void addProduct_withInactiveCart_throwsException() {
     var cart = new CartEntity(user);
@@ -190,5 +113,40 @@ class CartServiceTest {
 
     assertThrows(InvalidOperationException.class, () -> cartService.addProduct(1L, 1L, 2));
     verify(cartRepository, never()).save(any());
+  }
+
+  @Test
+  @DisplayName("getMyCart - should create cart when none exists for current user")
+  void getMyCart_whenNoCart_createsAndReturns() {
+    var cart = new CartEntity(user);
+
+    when(securityUtils.getCurrentUserId()).thenReturn(1L);
+    when(cartRepository.findByUserId(1L)).thenReturn(Optional.empty());
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    when(cartRepository.save(any())).thenReturn(cart);
+    when(cartMapper.toDto(cart)).thenReturn(cartDto);
+
+    var result = cartService.getMyCart();
+
+    assertNotNull(result);
+    verify(cartRepository).findByUserId(1L);
+    verify(userRepository).findById(1L);
+    verify(cartRepository).save(any());
+  }
+
+  @Test
+  @DisplayName("clearMyCart - should clear all items from current user's cart")
+  void clearMyCart_withValidData_clearsItems() {
+    var cart = new CartEntity(user);
+    var item = new CartItemEntity(cart, product, 2, product.getUnitPrice());
+    cart.addItem(item);
+
+    when(securityUtils.getCurrentUserId()).thenReturn(1L);
+    when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
+
+    cartService.clearMyCart();
+
+    assertEquals(0, cart.getItems().size());
+    verify(cartRepository).save(cart);
   }
 }

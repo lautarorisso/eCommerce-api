@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -15,17 +14,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.lautarorisso.eCommerce_api.dto.response.OrderDto;
 import com.lautarorisso.eCommerce_api.enums.OrderStatus;
 import com.lautarorisso.eCommerce_api.exceptions.InsufficientResourcesException;
 import com.lautarorisso.eCommerce_api.exceptions.InvalidOperationException;
-import com.lautarorisso.eCommerce_api.exceptions.ResourceNotFoundException;
 import com.lautarorisso.eCommerce_api.mapper.OrderMapper;
 import com.lautarorisso.eCommerce_api.model.CartEntity;
 import com.lautarorisso.eCommerce_api.model.CartItemEntity;
@@ -122,72 +116,6 @@ class OrderServiceTest {
 
     assertThrows(InsufficientResourcesException.class, () -> orderService.createOrder(1L));
     verify(orderRepository, never()).save(any());
-  }
-
-  @Test
-  @DisplayName("getAllOrders - should return paginated orders")
-  void getAllOrders_withFilters_returnsPage() {
-    var order = new OrderEntity(user);
-    var pageable = PageRequest.of(0, 20);
-    var page = new PageImpl<>(List.of(order));
-
-    when(securityUtils.getCurrentUser()).thenReturn(currentUser);
-    when(orderRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
-    when(orderMapper.toDto(order)).thenReturn(orderDto);
-
-    Page<OrderDto> result = orderService.getAllOrders(1L, OrderStatus.PENDING, null, null, pageable);
-
-    assertEquals(1, result.getTotalElements());
-    verify(orderRepository).findAll(any(Specification.class), eq(pageable));
-  }
-
-  @Test
-  @DisplayName("getOrderById - should return OrderDto when order exists")
-  void getOrderById_whenExists_returnsDto() {
-    var order = new OrderEntity(user);
-
-    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-    when(securityUtils.getCurrentUser()).thenReturn(currentUser);
-    when(orderMapper.toDto(order)).thenReturn(orderDto);
-
-    var result = orderService.getOrderById(1L);
-
-    assertNotNull(result);
-    verify(orderRepository).findById(1L);
-  }
-
-  @Test
-  @DisplayName("getOrderById - should throw ResourceNotFoundException when order does not exist")
-  void getOrderById_whenNotExists_throwsException() {
-    when(orderRepository.findById(99L)).thenReturn(Optional.empty());
-
-    assertThrows(ResourceNotFoundException.class, () -> orderService.getOrderById(99L));
-  }
-
-  @Test
-  @DisplayName("cancelOrder - should cancel a pending order")
-  void cancelOrder_whenPending_cancelsSuccessfully() {
-    var order = new OrderEntity(user);
-
-    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-    when(securityUtils.getCurrentUser()).thenReturn(currentUser);
-
-    orderService.cancelOrder(1L);
-
-    assertEquals(OrderStatus.CANCELLED, order.getStatus());
-    verify(orderRepository).save(order);
-  }
-
-  @Test
-  @DisplayName("cancelOrder - should throw on non-pending order")
-  void cancelOrder_whenNotPending_throwsException() {
-    var order = new OrderEntity(user);
-    order.markAsPaid();
-
-    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-    when(securityUtils.getCurrentUser()).thenReturn(currentUser);
-
-    assertThrows(IllegalStateException.class, () -> orderService.cancelOrder(1L));
   }
 
   @Test

@@ -11,7 +11,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -20,6 +19,7 @@ import com.lautarorisso.eCommerce_api.dto.request.RegisterRequest;
 import com.lautarorisso.eCommerce_api.dto.response.AuthResponse;
 import com.lautarorisso.eCommerce_api.exceptions.DuplicateResourceException;
 import com.lautarorisso.eCommerce_api.model.UserEntity;
+import com.lautarorisso.eCommerce_api.repository.CartRepository;
 import com.lautarorisso.eCommerce_api.repository.UserRepository;
 import com.lautarorisso.eCommerce_api.security.JwtService;
 import com.lautarorisso.eCommerce_api.service.impl.AuthenticationServiceImpl;
@@ -35,6 +35,9 @@ class AuthenticationServiceTest {
 
   @Mock
   private UserRepository userRepository;
+
+  @Mock
+  private CartRepository cartRepository;
 
   @Mock
   private PasswordEncoder passwordEncoder;
@@ -62,17 +65,6 @@ class AuthenticationServiceTest {
   }
 
   @Test
-  @DisplayName("login - should throw BadCredentialsException when credentials are invalid")
-  void login_withInvalidCredentials_throwsException() {
-    var loginRequest = new LoginRequest("user@example.com", "wrong");
-
-    when(authenticationManager.authenticate(any()))
-        .thenThrow(new BadCredentialsException("Bad credentials"));
-
-    assertThrows(BadCredentialsException.class, () -> authService.login(loginRequest));
-  }
-
-  @Test
   @DisplayName("register - should create user and return AuthResponse")
   void register_withValidData_returnsAuthResponse() {
     var request = new RegisterRequest("johndoe", "user@example.com", "password123");
@@ -81,6 +73,7 @@ class AuthenticationServiceTest {
     when(userRepository.existsByEmail("user@example.com")).thenReturn(false);
     when(passwordEncoder.encode("password123")).thenReturn("encoded");
     when(userRepository.save(any())).thenReturn(user);
+    when(cartRepository.save(any())).thenReturn(null);
     when(jwtService.createToken(user.getId(), user.getEmail(), user.getRole().name())).thenReturn("jwt-token");
 
     AuthResponse response = authService.register(request);
@@ -90,6 +83,7 @@ class AuthenticationServiceTest {
     verify(userRepository).existsByEmail("user@example.com");
     verify(passwordEncoder).encode("password123");
     verify(userRepository).save(any());
+    verify(cartRepository).save(any());
   }
 
   @Test

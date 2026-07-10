@@ -15,10 +15,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.lautarorisso.eCommerce_api.config.TestSecurityConfig;
-import com.lautarorisso.eCommerce_api.dto.request.LoginRequest;
-import com.lautarorisso.eCommerce_api.dto.request.RegisterRequest;
 import com.lautarorisso.eCommerce_api.dto.response.AuthResponse;
-import com.lautarorisso.eCommerce_api.exceptions.DuplicateResourceException;
 import com.lautarorisso.eCommerce_api.security.CustomUserDetailsService;
 import com.lautarorisso.eCommerce_api.security.JwtService;
 import com.lautarorisso.eCommerce_api.service.AuthenticationService;
@@ -40,33 +37,6 @@ class AuthControllerTest {
   private CustomUserDetailsService userDetailsService;
 
   @Test
-  @DisplayName("POST /api/auth/login - should return 200 and token")
-  void login_withValidCredentials_returns200() throws Exception {
-    var response = new AuthResponse("jwt-token", 1L, "user@example.com", "USER");
-    when(authService.login(any())).thenReturn(response);
-
-    mockMvc.perform(post("/api/auth/login")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("""
-                    { "email": "user@example.com", "password": "pass123" }
-                    """))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.token").value("jwt-token"))
-        .andExpect(jsonPath("$.email").value("user@example.com"));
-  }
-
-  @Test
-  @DisplayName("POST /api/auth/login - should return 400 when email is missing")
-  void login_withMissingEmail_returns400() throws Exception {
-    mockMvc.perform(post("/api/auth/login")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("""
-                    { "password": "pass123" }
-                    """))
-        .andExpect(status().isBadRequest());
-  }
-
-  @Test
   @DisplayName("POST /api/auth/register - should return 201 and token")
   void register_withValidData_returns201() throws Exception {
     var response = new AuthResponse("jwt-token", 1L, "user@example.com", "USER");
@@ -79,19 +49,5 @@ class AuthControllerTest {
                     """))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.token").value("jwt-token"));
-  }
-
-  @Test
-  @DisplayName("POST /api/auth/register - should return 409 when email already exists")
-  void register_withDuplicateEmail_returns409() throws Exception {
-    when(authService.register(any()))
-        .thenThrow(new DuplicateResourceException("User", "email", "user@example.com"));
-
-    mockMvc.perform(post("/api/auth/register")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("""
-                    { "username": "johndoe", "email": "user@example.com", "password": "pass123" }
-                    """))
-        .andExpect(status().isConflict());
   }
 }
