@@ -1,7 +1,6 @@
 package com.lautarorisso.eCommerce_api.security;
 
 import java.util.Date;
-import java.util.List;
 
 import javax.crypto.SecretKey;
 
@@ -44,18 +43,6 @@ public class JwtService {
         .expiration(new Date(now.getTime() + expirationHours * 3600_000L))
         .signWith(key)
         .compact();
-  }
-
-  public String extractEmail(String token) {
-    return getClaims(token).getSubject();
-  }
-
-  public Long extractUserId(String token) {
-    return getClaims(token).get("userId", Long.class);
-  }
-
-  public List<String> extractRoles(String token) {
-    return List.of(getClaims(token).get("role", String.class));
   }
 
   public boolean isValid(String token) {

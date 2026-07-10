@@ -115,7 +115,6 @@ public class CartServiceImpl implements CartService {
     return cartMapper.toDto(cart);
   }
 
-  @Transactional
   protected CartEntity getOrCreateCartForCurrentUser() {
     Long userId = securityUtils.getCurrentUserId();
     return cartRepository.findByUserId(userId)

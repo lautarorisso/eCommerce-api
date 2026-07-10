@@ -119,7 +119,6 @@ public class OrderServiceImpl implements OrderService {
     if (!order.getUser().getId().equals(currentUser.id()) && !securityUtils.isAdmin()) {
       throw new AccessDeniedException("Access denied");
     }
-    order.markAsPaid();
     List<ProductEntity> products = order.getItems().stream()
         .map(item -> {
           try {
@@ -131,6 +130,7 @@ public class OrderServiceImpl implements OrderService {
           return item.getProduct();
         })
         .toList();
+    order.markAsPaid();
     productRepository.saveAll(products);
     orderRepository.save(order);
   }
