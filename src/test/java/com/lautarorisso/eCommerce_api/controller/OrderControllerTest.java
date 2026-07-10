@@ -38,7 +38,7 @@ class OrderControllerTest {
   @MockitoBean
   private CustomUserDetailsService userDetailsService;
 
-  private final OrderDto order = new OrderDto(1L, java.util.List.of(), BigDecimal.valueOf(59.98), OrderStatus.PENDING);
+  private final OrderDto order = new OrderDto(1L, java.util.List.of(), BigDecimal.valueOf(59.98), OrderStatus.PENDING, null, 1L);
 
   @Test
   @DisplayName("POST /api/orders - should create order and return 201")

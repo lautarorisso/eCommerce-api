@@ -9,10 +9,12 @@ import com.lautarorisso.eCommerce_api.dto.request.CreateCategoryRequest;
 import com.lautarorisso.eCommerce_api.dto.request.UpdateCategoryRequest;
 import com.lautarorisso.eCommerce_api.dto.response.CategoryDto;
 import com.lautarorisso.eCommerce_api.exceptions.DuplicateResourceException;
+import com.lautarorisso.eCommerce_api.exceptions.InvalidOperationException;
 import com.lautarorisso.eCommerce_api.exceptions.ResourceNotFoundException;
 import com.lautarorisso.eCommerce_api.mapper.CategoryMapper;
 import com.lautarorisso.eCommerce_api.model.CategoryEntity;
 import com.lautarorisso.eCommerce_api.repository.CategoryRepository;
+import com.lautarorisso.eCommerce_api.repository.ProductRepository;
 import com.lautarorisso.eCommerce_api.service.CategoryService;
 
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ public class CategoryServiceImpl implements CategoryService {
 
   private final CategoryRepository categoryRepository;
   private final CategoryMapper categoryMapper;
+  private final ProductRepository productRepository;
 
   @Transactional
   @Override
@@ -34,6 +37,7 @@ public class CategoryServiceImpl implements CategoryService {
     return categoryMapper.toDto(categoryRepository.save(entity));
   }
 
+  @Transactional(readOnly = true)
   @Override
   public List<CategoryDto> getAllCategories() {
     return categoryRepository.findAll().stream()
@@ -41,6 +45,7 @@ public class CategoryServiceImpl implements CategoryService {
         .toList();
   }
 
+  @Transactional(readOnly = true)
   @Override
   public CategoryDto getCategoryById(Long id) {
     CategoryEntity entity = categoryRepository.findById(id)
@@ -65,6 +70,9 @@ public class CategoryServiceImpl implements CategoryService {
   public void deleteCategory(Long id) {
     if (!categoryRepository.existsById(id)) {
       throw new ResourceNotFoundException("Category", id);
+    }
+    if (productRepository.existsByCategoryId(id)) {
+      throw new InvalidOperationException("Cannot delete category: it has associated products");
     }
     categoryRepository.deleteById(id);
   }

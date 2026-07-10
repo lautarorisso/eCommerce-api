@@ -36,6 +36,7 @@ public class CartServiceImpl implements CartService {
   private final CartMapper cartMapper;
   private final SecurityUtils securityUtils;
 
+  @Transactional(readOnly = true)
   @Override
   public CartDto getCartByUserId(Long userId) {
     CurrentUser currentUser = securityUtils.getCurrentUser();
@@ -125,6 +126,7 @@ public class CartServiceImpl implements CartService {
         });
   }
 
+  @Transactional(readOnly = true)
   @Override
   public CartDto getMyCart() {
     CartEntity cart = getOrCreateCartForCurrentUser();

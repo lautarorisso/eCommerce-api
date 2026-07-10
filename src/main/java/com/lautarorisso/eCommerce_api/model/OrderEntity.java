@@ -51,12 +51,9 @@ public class OrderEntity {
   public OrderEntity(UserEntity user) {
     this.user = user;
     this.items = new ArrayList<>();
+    this.totalPrice = BigDecimal.ZERO;
     this.status = OrderStatus.PENDING;
     this.createdAt = LocalDateTime.now();
-  }
-
-  private void calculateTotalPrice() {
-    this.totalPrice = items.stream().map(OrderItemEntity::getSubtotal).reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 
   public void markAsPaid() {
@@ -89,7 +86,7 @@ public class OrderEntity {
 
   public void addItem(OrderItemEntity orderItem) {
     items.add(orderItem);
-    calculateTotalPrice();
+    this.totalPrice = this.totalPrice.add(orderItem.getSubtotal());
   }
 
 }

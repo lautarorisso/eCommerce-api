@@ -1,6 +1,7 @@
 package com.lautarorisso.eCommerce_api.service.impl;
 
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,7 +37,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     var auth = authenticationManager.authenticate(
         new UsernamePasswordAuthenticationToken(request.email(), request.password()));
     var user = userRepository.findByEmail(auth.getName())
-        .orElseThrow(() -> new RuntimeException("Bad credentials"));
+        .orElseThrow(() -> new BadCredentialsException("Bad credentials"));
     return buildAuthResponse(user);
   }
 

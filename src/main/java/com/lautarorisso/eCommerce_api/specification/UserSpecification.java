@@ -12,7 +12,8 @@ public class UserSpecification {
       if (search == null || search.isBlank()) {
         return null;
       }
-      String pattern = "%" + search.toLowerCase() + "%";
+      String escaped = search.toLowerCase().replace("%", "\\%").replace("_", "\\_");
+      String pattern = "%" + escaped + "%";
       return cb.or(
           cb.like(cb.lower(root.get("username")), pattern),
           cb.like(cb.lower(root.get("email")), pattern));

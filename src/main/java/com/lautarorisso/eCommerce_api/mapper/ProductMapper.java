@@ -9,8 +9,8 @@ import com.lautarorisso.eCommerce_api.model.ProductEntity;
 
 @Mapper(componentModel = "spring", uses = CategoryMapper.class)
 public interface ProductMapper {
-  @Mapping(target = "categoryId", source = "category.id")
-  @Mapping(target = "categoryName", source = "category.name")
+  @Mapping(target = "categoryId", expression = "java(product.getCategory() != null ? product.getCategory().getId() : null)")
+  @Mapping(target = "categoryName", expression = "java(product.getCategory() != null ? product.getCategory().getName() : null)")
   ProductDto toDto(ProductEntity product);
 
   @Mapping(target = "category", ignore = true)

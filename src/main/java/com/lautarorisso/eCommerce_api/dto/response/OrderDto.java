@@ -1,6 +1,7 @@
 package com.lautarorisso.eCommerce_api.dto.response;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.lautarorisso.eCommerce_api.enums.OrderStatus;
@@ -19,5 +20,11 @@ public record OrderDto(
     BigDecimal totalPrice,
 
     @Schema(description = "Order status", example = "PENDING")
-    OrderStatus status) {
+    OrderStatus status,
+
+    @Schema(description = "Order creation timestamp")
+    LocalDateTime createdAt,
+
+    @Schema(description = "User ID who placed the order", example = "1")
+    Long userId) {
 }

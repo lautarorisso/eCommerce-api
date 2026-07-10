@@ -17,6 +17,7 @@ import com.lautarorisso.eCommerce_api.dto.response.UserDto;
 import com.lautarorisso.eCommerce_api.enums.Role;
 import com.lautarorisso.eCommerce_api.exceptions.InvalidOperationException;
 import com.lautarorisso.eCommerce_api.mapper.UserMapper;
+import com.lautarorisso.eCommerce_api.model.CartEntity;
 import com.lautarorisso.eCommerce_api.model.UserEntity;
 import com.lautarorisso.eCommerce_api.repository.CartRepository;
 import com.lautarorisso.eCommerce_api.repository.OrderRepository;
@@ -70,7 +71,7 @@ class UserServiceTest {
   @DisplayName("deleteUser - should delete when user exists and has no references")
   void deleteUser_whenValid_deletesSuccessfully() {
     when(userRepository.existsById(1L)).thenReturn(true);
-    when(cartRepository.existsByUserId(1L)).thenReturn(false);
+    when(cartRepository.findByUserId(1L)).thenReturn(java.util.Optional.empty());
     when(orderRepository.existsByUserId(1L)).thenReturn(false);
 
     userService.deleteUser(1L);
@@ -79,10 +80,10 @@ class UserServiceTest {
   }
 
   @Test
-  @DisplayName("deleteUser - should throw InvalidOperationException when user has cart")
+  @DisplayName("deleteUser - should throw InvalidOperationException when user has active cart")
   void deleteUser_whenHasCart_throwsException() {
     when(userRepository.existsById(1L)).thenReturn(true);
-    when(cartRepository.existsByUserId(1L)).thenReturn(true);
+    when(cartRepository.findByUserId(1L)).thenReturn(java.util.Optional.of(new CartEntity(user)));
 
     assertThrows(InvalidOperationException.class, () -> userService.deleteUser(1L));
     verify(userRepository, never()).deleteById(any());

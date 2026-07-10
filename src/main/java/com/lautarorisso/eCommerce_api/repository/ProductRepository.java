@@ -7,4 +7,6 @@ import com.lautarorisso.eCommerce_api.model.ProductEntity;
 
 public interface ProductRepository extends JpaRepository<ProductEntity, Long>, JpaSpecificationExecutor<ProductEntity> {
   boolean existsByName(String name);
+
+  boolean existsByCategoryId(Long categoryId);
 }

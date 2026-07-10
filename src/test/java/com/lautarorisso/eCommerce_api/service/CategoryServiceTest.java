@@ -18,6 +18,7 @@ import com.lautarorisso.eCommerce_api.exceptions.ResourceNotFoundException;
 import com.lautarorisso.eCommerce_api.mapper.CategoryMapper;
 import com.lautarorisso.eCommerce_api.model.CategoryEntity;
 import com.lautarorisso.eCommerce_api.repository.CategoryRepository;
+import com.lautarorisso.eCommerce_api.repository.ProductRepository;
 import com.lautarorisso.eCommerce_api.service.impl.CategoryServiceImpl;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,6 +29,9 @@ class CategoryServiceTest {
 
   @Mock
   private CategoryMapper categoryMapper;
+
+  @Mock
+  private ProductRepository productRepository;
 
   @InjectMocks
   private CategoryServiceImpl categoryService;
@@ -53,12 +57,25 @@ class CategoryServiceTest {
   }
 
   @Test
-  @DisplayName("deleteCategory - should delete when category exists")
-  void deleteCategory_whenExists_deletesSuccessfully() {
+  @DisplayName("deleteCategory - should delete when category exists and has no products")
+  void deleteCategory_whenExistsAndNoProducts_deletesSuccessfully() {
     when(categoryRepository.existsById(1L)).thenReturn(true);
+    when(productRepository.existsByCategoryId(1L)).thenReturn(false);
 
     categoryService.deleteCategory(1L);
 
     verify(categoryRepository).deleteById(1L);
+  }
+
+  @Test
+  @DisplayName("deleteCategory - should throw InvalidOperationException when category has products")
+  void deleteCategory_whenHasProducts_throwsException() {
+    when(categoryRepository.existsById(1L)).thenReturn(true);
+    when(productRepository.existsByCategoryId(1L)).thenReturn(true);
+
+    assertThrows(com.lautarorisso.eCommerce_api.exceptions.InvalidOperationException.class,
+        () -> categoryService.deleteCategory(1L));
+
+    verify(categoryRepository, never()).deleteById(any());
   }
 }

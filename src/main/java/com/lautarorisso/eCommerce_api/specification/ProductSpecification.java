@@ -14,7 +14,8 @@ public class ProductSpecification {
       if (search == null || search.isBlank()) {
         return null;
       }
-      return cb.like(cb.lower(root.get("name")), "%" + search.toLowerCase() + "%");
+      String escaped = search.toLowerCase().replace("%", "\\%").replace("_", "\\_");
+      return cb.like(cb.lower(root.get("name")), "%" + escaped + "%");
     };
   }
 

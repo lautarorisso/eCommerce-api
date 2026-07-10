@@ -8,6 +8,7 @@ import com.lautarorisso.eCommerce_api.model.OrderItemEntity;
 
 @Mapper(componentModel = "spring")
 public interface OrderItemMapper {
+  @Mapping(source = "product.id", target = "productId")
   @Mapping(source = "product.name", target = "productName")
   OrderItemDto toDto(OrderItemEntity item);
 }

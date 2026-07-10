@@ -140,9 +140,8 @@ public class OrderServiceImpl implements OrderService {
   public void shipOrder(Long orderId) {
     OrderEntity order = orderRepository.findById(orderId)
         .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
-    CurrentUser currentUser = securityUtils.getCurrentUser();
-    if (!order.getUser().getId().equals(currentUser.id()) && !securityUtils.isAdmin()) {
-      throw new AccessDeniedException("Access denied");
+    if (!securityUtils.isAdmin()) {
+      throw new AccessDeniedException("Only admins can ship orders");
     }
     order.markAsShipped();
     orderRepository.save(order);
@@ -153,9 +152,8 @@ public class OrderServiceImpl implements OrderService {
   public void deliverOrder(Long orderId) {
     OrderEntity order = orderRepository.findById(orderId)
         .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
-    CurrentUser currentUser = securityUtils.getCurrentUser();
-    if (!order.getUser().getId().equals(currentUser.id()) && !securityUtils.isAdmin()) {
-      throw new AccessDeniedException("Access denied");
+    if (!securityUtils.isAdmin()) {
+      throw new AccessDeniedException("Only admins can deliver orders");
     }
     order.markAsDelivered();
     orderRepository.save(order);

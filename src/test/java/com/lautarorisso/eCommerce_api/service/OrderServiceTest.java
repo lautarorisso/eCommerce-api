@@ -69,7 +69,7 @@ class OrderServiceTest {
 
     currentUser = new CurrentUser(1L, "user@example.com", "USER");
 
-    orderDto = new OrderDto(1L, java.util.List.of(), BigDecimal.valueOf(59.98), OrderStatus.PENDING);
+    orderDto = new OrderDto(1L, java.util.List.of(), BigDecimal.valueOf(59.98), OrderStatus.PENDING, null, 1L);
   }
 
   @Test

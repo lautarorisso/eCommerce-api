@@ -51,6 +51,7 @@ public class ProductServiceImpl implements ProductService {
     return productMapper.toDto(savedProduct);
   }
 
+  @Transactional(readOnly = true)
   @Override
   public ProductDto getProductById(Long productId) {
     ProductEntity product = productRepository.findById(productId)
@@ -58,6 +59,7 @@ public class ProductServiceImpl implements ProductService {
     return productMapper.toDto(product);
   }
 
+  @Transactional(readOnly = true)
   @Override
   public Page<ProductDto> getAllProducts(String search, BigDecimal minPrice, BigDecimal maxPrice, Boolean inStock,
       Long categoryId, Pageable pageable) {
@@ -98,8 +100,8 @@ public class ProductServiceImpl implements ProductService {
     if (!productRepository.existsById(productId)) {
       throw new ResourceNotFoundException("Product", productId);
     }
-    if (cartItemRepository.existsByProductId(productId)) {
-      throw new InvalidOperationException("Cannot delete product: it is in one or more carts");
+    if (cartItemRepository.existsByProductIdAndActiveCart(productId)) {
+      throw new InvalidOperationException("Cannot delete product: it is in one or more active carts");
     }
     if (orderItemRepository.existsByProductId(productId)) {
       throw new InvalidOperationException("Cannot delete product: it is in one or more orders");

@@ -8,8 +8,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import com.lautarorisso.eCommerce_api.enums.Role;
+import com.lautarorisso.eCommerce_api.model.CartEntity;
 import com.lautarorisso.eCommerce_api.model.CategoryEntity;
 import com.lautarorisso.eCommerce_api.model.UserEntity;
+import com.lautarorisso.eCommerce_api.repository.CartRepository;
 import com.lautarorisso.eCommerce_api.repository.CategoryRepository;
 import com.lautarorisso.eCommerce_api.repository.UserRepository;
 
@@ -21,6 +23,7 @@ public class DataSeeder implements CommandLineRunner {
 
   private final UserRepository userRepository;
   private final CategoryRepository categoryRepository;
+  private final CartRepository cartRepository;
   private final PasswordEncoder passwordEncoder;
 
   @Value("${admin.email}")
@@ -40,6 +43,7 @@ public class DataSeeder implements CommandLineRunner {
       UserEntity admin = new UserEntity("admin", adminEmail,
           passwordEncoder.encode(adminPassword), Role.ADMIN);
       userRepository.save(admin);
+      cartRepository.save(new CartEntity(admin));
     }
   }
 

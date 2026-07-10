@@ -81,7 +81,7 @@ class ProductServiceTest {
   @DisplayName("deleteProduct - should throw InvalidOperationException when product is in a cart")
   void deleteProduct_whenInCart_throwsException() {
     when(productRepository.existsById(1L)).thenReturn(true);
-    when(cartItemRepository.existsByProductId(1L)).thenReturn(true);
+    when(cartItemRepository.existsByProductIdAndActiveCart(1L)).thenReturn(true);
 
     assertThrows(InvalidOperationException.class, () -> productService.deleteProduct(1L));
     verify(productRepository, never()).deleteById(any());

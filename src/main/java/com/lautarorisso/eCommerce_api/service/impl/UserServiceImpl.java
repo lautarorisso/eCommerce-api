@@ -15,6 +15,7 @@ import com.lautarorisso.eCommerce_api.exceptions.DuplicateResourceException;
 import com.lautarorisso.eCommerce_api.exceptions.InvalidOperationException;
 import com.lautarorisso.eCommerce_api.exceptions.ResourceNotFoundException;
 import com.lautarorisso.eCommerce_api.mapper.UserMapper;
+import com.lautarorisso.eCommerce_api.enums.CartStatus;
 import com.lautarorisso.eCommerce_api.model.CartEntity;
 import com.lautarorisso.eCommerce_api.model.UserEntity;
 import com.lautarorisso.eCommerce_api.repository.CartRepository;
@@ -50,6 +51,7 @@ public class UserServiceImpl implements UserService {
     return userMapper.toDto(savedUser);
   }
 
+  @Transactional(readOnly = true)
   @Override
   public Page<UserDto> getAllUsers(String search, Role role, Pageable pageable) {
     Specification<UserEntity> spec = Specification
@@ -58,6 +60,7 @@ public class UserServiceImpl implements UserService {
     return userRepository.findAll(spec, pageable).map(userMapper::toDto);
   }
 
+  @Transactional(readOnly = true)
   @Override
   public UserDto getUserById(Long userId) {
     UserEntity user = userRepository.findById(userId)
@@ -89,7 +92,8 @@ public class UserServiceImpl implements UserService {
     if (!userRepository.existsById(userId)) {
       throw new ResourceNotFoundException("User", userId);
     }
-    if (cartRepository.existsByUserId(userId)) {
+    var cart = cartRepository.findByUserId(userId);
+    if (cart.isPresent() && cart.get().isActive()) {
       throw new InvalidOperationException("Cannot delete user: user has an active cart");
     }
     if (orderRepository.existsByUserId(userId)) {
@@ -98,12 +102,14 @@ public class UserServiceImpl implements UserService {
     userRepository.deleteById(userId);
   }
 
+  @Transactional(readOnly = true)
   @Override
   public UserDto getCurrentUser() {
     Long currentUserId = securityUtils.getCurrentUserId();
     return getUserById(currentUserId);
   }
 
+  @Transactional(readOnly = true)
   @Override
   public UserDto getUserByEmail(String email) {
     UserEntity user = userRepository.findByEmail(email)
