@@ -119,7 +119,12 @@ public class OrderServiceImpl implements OrderService {
     order.markAsPaid();
     List<ProductEntity> products = order.getItems().stream()
         .map(item -> {
-          item.getProduct().decreaseStock(item.getQuantity());
+          try {
+            item.getProduct().decreaseStock(item.getQuantity());
+          } catch (IllegalArgumentException e) {
+            throw new InsufficientResourcesException(item.getProduct().getName(),
+                item.getQuantity(), item.getProduct().getStock());
+          }
           return item.getProduct();
         })
         .toList();

@@ -16,9 +16,7 @@ import com.lautarorisso.eCommerce_api.exceptions.ResourceNotFoundException;
 import com.lautarorisso.eCommerce_api.mapper.CartMapper;
 import com.lautarorisso.eCommerce_api.model.CartEntity;
 import com.lautarorisso.eCommerce_api.model.CartItemEntity;
-import com.lautarorisso.eCommerce_api.model.UserEntity;
 import com.lautarorisso.eCommerce_api.model.ProductEntity;
-import com.lautarorisso.eCommerce_api.repository.UserRepository;
 import com.lautarorisso.eCommerce_api.service.CartService;
 
 import com.lautarorisso.eCommerce_api.repository.ProductRepository;
@@ -31,7 +29,6 @@ import lombok.RequiredArgsConstructor;
 public class CartServiceImpl implements CartService {
 
   private final CartRepository cartRepository;
-  private final UserRepository userRepository;
   private final ProductRepository productRepository;
   private final CartMapper cartMapper;
   private final SecurityUtils securityUtils;
@@ -42,15 +39,9 @@ public class CartServiceImpl implements CartService {
     if (!currentUser.id().equals(userId) && !securityUtils.isAdmin()) {
       throw new AccessDeniedException("Access denied");
     }
-    CartEntity cart = cartRepository.findByUserId(userId).orElseGet(() -> createCart(userId));
+    CartEntity cart = cartRepository.findByUserId(userId)
+        .orElseThrow(() -> new ResourceNotFoundException("Cart", "userId", userId.toString()));
     return cartMapper.toDto(cart);
-  }
-
-  @Transactional
-  private CartEntity createCart(Long userId) {
-    UserEntity user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User", userId));
-    CartEntity cart = new CartEntity(user);
-    return cartRepository.save(cart);
   }
 
   @Transactional
@@ -66,14 +57,14 @@ public class CartServiceImpl implements CartService {
     }
     ProductEntity product = productRepository.findById(productId)
         .orElseThrow(() -> new ResourceNotFoundException("Product", productId));
-    if (quantity > product.getStock()) {
-      throw new InsufficientResourcesException(product.getName(), quantity, product.getStock());
-    }
     Optional<CartItemEntity> existingItem = cart.getItems().stream()
         .filter(item -> item.getProduct().getId().equals(productId)).findFirst();
-    CartItemEntity item = existingItem.orElse(null);
-    if (item != null) {
-      item.changeQuantity(item.getQuantity() + quantity);
+    int totalQty = existingItem.map(CartItemEntity::getQuantity).orElse(0) + quantity;
+    if (totalQty > product.getStock()) {
+      throw new InsufficientResourcesException(product.getName(), totalQty, product.getStock());
+    }
+    if (existingItem.isPresent()) {
+      existingItem.get().changeQuantity(totalQty);
     } else {
       CartItemEntity newItem = new CartItemEntity(cart, product, quantity, product.getUnitPrice());
       cart.addItem(newItem);

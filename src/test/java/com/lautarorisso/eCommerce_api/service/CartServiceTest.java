@@ -27,7 +27,6 @@ import com.lautarorisso.eCommerce_api.model.ProductEntity;
 import com.lautarorisso.eCommerce_api.model.UserEntity;
 import com.lautarorisso.eCommerce_api.repository.CartRepository;
 import com.lautarorisso.eCommerce_api.repository.ProductRepository;
-import com.lautarorisso.eCommerce_api.repository.UserRepository;
 import com.lautarorisso.eCommerce_api.security.CurrentUser;
 import com.lautarorisso.eCommerce_api.security.SecurityUtils;
 import com.lautarorisso.eCommerce_api.service.impl.CartServiceImpl;
@@ -37,9 +36,6 @@ class CartServiceTest {
 
   @Mock
   private CartRepository cartRepository;
-
-  @Mock
-  private UserRepository userRepository;
 
   @Mock
   private ProductRepository productRepository;
@@ -90,20 +86,15 @@ class CartServiceTest {
   }
 
   @Test
-  @DisplayName("getCartByUserId - should create new cart when none exists")
-  void getCartByUserId_whenNoCart_createsNew() {
+  @DisplayName("getCartByUserId - should throw ResourceNotFoundException when no cart exists")
+  void getCartByUserId_whenNoCart_throwsException() {
     when(securityUtils.getCurrentUser()).thenReturn(currentUser);
     when(cartRepository.findByUserId(1L)).thenReturn(Optional.empty());
-    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-    when(cartRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-    when(cartMapper.toDto(any())).thenReturn(cartDto);
 
-    var result = cartService.getCartByUserId(1L);
+    assertThrows(ResourceNotFoundException.class, () -> cartService.getCartByUserId(1L));
 
-    assertNotNull(result);
     verify(cartRepository).findByUserId(1L);
-    verify(userRepository).findById(1L);
-    verify(cartRepository).save(any());
+    verify(cartRepository, never()).save(any());
   }
 
   @Test

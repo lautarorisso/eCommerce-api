@@ -23,6 +23,8 @@ import com.lautarorisso.eCommerce_api.repository.ProductRepository;
 import com.lautarorisso.eCommerce_api.service.ProductService;
 import com.lautarorisso.eCommerce_api.specification.ProductSpecification;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -35,6 +37,7 @@ public class ProductServiceImpl implements ProductService {
   private final OrderItemRepository orderItemRepository;
   private final CategoryRepository categoryRepository;
 
+  @Transactional
   @Override
   public ProductDto createProduct(CreateProductRequest request) {
     if (productRepository.existsByName(request.name())) {
@@ -66,6 +69,7 @@ public class ProductServiceImpl implements ProductService {
     return productRepository.findAll(spec, pageable).map(productMapper::toDto);
   }
 
+  @Transactional
   @Override
   public ProductDto updateProduct(Long productId, UpdateProductRequest request) {
     ProductEntity product = productRepository.findById(productId)

@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.lautarorisso.eCommerce_api.dto.request.CreateUserRequest;
 import com.lautarorisso.eCommerce_api.dto.request.UpdateUserRequest;
@@ -59,6 +60,7 @@ public class UserServiceImpl implements UserService {
     return userMapper.toDto(user);
   }
 
+  @Transactional
   @Override
   public UserDto updateUser(Long userId, UpdateUserRequest request) {
     UserEntity user = userRepository.findById(userId)

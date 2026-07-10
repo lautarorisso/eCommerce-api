@@ -3,6 +3,7 @@ package com.lautarorisso.eCommerce_api.service.impl;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.lautarorisso.eCommerce_api.dto.request.CreateCategoryRequest;
 import com.lautarorisso.eCommerce_api.dto.request.UpdateCategoryRequest;
@@ -46,6 +47,7 @@ public class CategoryServiceImpl implements CategoryService {
     return categoryMapper.toDto(entity);
   }
 
+  @Transactional
   @Override
   public CategoryDto updateCategory(Long id, UpdateCategoryRequest request) {
     CategoryEntity entity = categoryRepository.findById(id)
