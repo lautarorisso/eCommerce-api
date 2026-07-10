@@ -19,6 +19,7 @@ import com.lautarorisso.eCommerce_api.model.UserEntity;
 import com.lautarorisso.eCommerce_api.repository.CartRepository;
 import com.lautarorisso.eCommerce_api.repository.OrderRepository;
 import com.lautarorisso.eCommerce_api.repository.UserRepository;
+import com.lautarorisso.eCommerce_api.security.SecurityUtils;
 import com.lautarorisso.eCommerce_api.service.UserService;
 import com.lautarorisso.eCommerce_api.specification.UserSpecification;
 
@@ -33,6 +34,7 @@ public class UserServiceImpl implements UserService {
   private final OrderRepository orderRepository;
   private final PasswordEncoder passwordEncoder;
   private final UserMapper userMapper;
+  private final SecurityUtils securityUtils;
 
   @Override
   public UserDto createUser(CreateUserRequest request) {
@@ -90,6 +92,12 @@ public class UserServiceImpl implements UserService {
       throw new InvalidOperationException("Cannot delete user: user has orders");
     }
     userRepository.deleteById(userId);
+  }
+
+  @Override
+  public UserDto getCurrentUser() {
+    Long currentUserId = securityUtils.getCurrentUserId();
+    return getUserById(currentUserId);
   }
 
   @Override

@@ -76,8 +76,8 @@ public class ProductController {
     return productService.createProduct(request);
   }
 
-  @PutMapping("/{productId}")
-  @Operation(summary = "Update a product", description = "Replaces all fields of a product (admin only)")
+  @PatchMapping("/{productId}")
+  @Operation(summary = "Update a product", description = "Updates some fields of a product (admin only)")
   @ApiResponses({
       @ApiResponse(responseCode = "200", description = "Product updated"),
       @ApiResponse(responseCode = "400", description = "Invalid input"),

@@ -3,15 +3,16 @@ package com.lautarorisso.eCommerce_api.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 @Schema(description = "Request to create a new user (admin only)")
 public record CreateUserRequest(
     @Schema(description = "Username", example = "johndoe")
-    @NotBlank String username,
+    @NotBlank @Size(min = 3, max = 50) String username,
 
     @Schema(description = "User email", example = "user@example.com")
-    @NotBlank @Email String email,
+    @NotBlank @Email @Size(max = 100) String email,
 
     @Schema(description = "Password", example = "securePassword123")
-    @NotBlank String password) {
+    @NotBlank @Size(min = 6, max = 100) String password) {
 }

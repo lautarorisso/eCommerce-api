@@ -7,14 +7,15 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Schema(description = "Request to create a new product")
 public record CreateProductRequest(
     @Schema(description = "Product name", example = "Wireless Mouse")
-    @NotBlank String name,
+    @NotBlank @Size(max = 100) String name,
 
     @Schema(description = "Product description", example = "Ergonomic wireless mouse with USB receiver")
-    @NotBlank String description,
+    @NotBlank @Size(max = 500) String description,
 
     @Schema(description = "Unit price", example = "29.99")
     @NotNull @DecimalMin("0.01") BigDecimal unitPrice,
