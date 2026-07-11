@@ -29,19 +29,22 @@ public class OrderItemEntity {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "product_id", nullable = false)
   private ProductEntity product;
-  @Column(nullable = false, precision = 10, scale = 2)
-  private BigDecimal unitPrice;
   @Column(nullable = false)
   private int quantity;
   @Column(nullable = false, precision = 10, scale = 2)
+  private BigDecimal unitPrice;
+  @Column(nullable = false, precision = 10, scale = 2)
   private BigDecimal subtotal;
 
-  public OrderItemEntity(OrderEntity order, ProductEntity product, BigDecimal unitPrice, int quantity) {
+  public OrderItemEntity(OrderEntity order, ProductEntity product, int quantity, BigDecimal unitPrice) {
     if (order == null) {
       throw new IllegalArgumentException("Order cannot be null");
     }
     if (product == null) {
       throw new IllegalArgumentException("Product cannot be null");
+    }
+    if (quantity <= 0) {
+      throw new IllegalArgumentException("Quantity must be positive");
     }
     if (unitPrice == null) {
       throw new IllegalArgumentException("Unit price cannot be null");
@@ -49,13 +52,10 @@ public class OrderItemEntity {
     if (unitPrice.compareTo(BigDecimal.ZERO) <= 0) {
       throw new IllegalArgumentException("Unit price must be positive");
     }
-    if (quantity <= 0) {
-      throw new IllegalArgumentException("Quantity must be positive");
-    }
     this.order = order;
     this.product = product;
-    this.unitPrice = unitPrice;
     this.quantity = quantity;
+    this.unitPrice = unitPrice;
     this.subtotal = unitPrice.multiply(BigDecimal.valueOf(quantity));
   }
 }

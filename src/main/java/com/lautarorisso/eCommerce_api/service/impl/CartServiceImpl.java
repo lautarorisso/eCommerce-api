@@ -3,10 +3,8 @@ package com.lautarorisso.eCommerce_api.service.impl;
 import java.util.Optional;
 
 import com.lautarorisso.eCommerce_api.exceptions.InsufficientResourcesException;
-import com.lautarorisso.eCommerce_api.security.CurrentUser;
 import com.lautarorisso.eCommerce_api.security.SecurityUtils;
 
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,10 +34,7 @@ public class CartServiceImpl implements CartService {
   @Transactional(readOnly = true)
   @Override
   public CartDto getCartByUserId(Long userId) {
-    CurrentUser currentUser = securityUtils.getCurrentUser();
-    if (!currentUser.id().equals(userId) && !securityUtils.isAdmin()) {
-      throw new AccessDeniedException("Access denied");
-    }
+    securityUtils.assertOwnerOrAdmin(userId);
     CartEntity cart = cartRepository.findByUserId(userId)
         .orElseThrow(() -> new ResourceNotFoundException("Cart", "userId", userId.toString()));
     return cartMapper.toDto(cart);
@@ -48,14 +43,8 @@ public class CartServiceImpl implements CartService {
   @Transactional
   @Override
   public CartDto addProduct(Long cartId, Long productId, int quantity) {
-    CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new ResourceNotFoundException("Cart", cartId));
-    CurrentUser currentUser = securityUtils.getCurrentUser();
-    if (!cart.getUser().getId().equals(currentUser.id()) && !securityUtils.isAdmin()) {
-      throw new AccessDeniedException("Access denied");
-    }
-    if (!cart.isActive()) {
-      throw new InvalidOperationException("Cart is not active");
-    }
+    CartEntity cart = validateCartAccess(cartId);
+    validateCartActive(cart);
     ProductEntity product = productRepository.findById(productId)
         .orElseThrow(() -> new ResourceNotFoundException("Product", productId));
     Optional<CartItemEntity> existingItem = cart.getItems().stream()
@@ -77,14 +66,8 @@ public class CartServiceImpl implements CartService {
   @Transactional
   @Override
   public CartDto removeProduct(Long cartId, Long productId) {
-    CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new ResourceNotFoundException("Cart", cartId));
-    CurrentUser currentUser = securityUtils.getCurrentUser();
-    if (!cart.getUser().getId().equals(currentUser.id()) && !securityUtils.isAdmin()) {
-      throw new AccessDeniedException("Access denied");
-    }
-    if (!cart.isActive()) {
-      throw new InvalidOperationException("Cart is not active");
-    }
+    CartEntity cart = validateCartAccess(cartId);
+    validateCartActive(cart);
     CartItemEntity existingItem = cart.getItems().stream()
         .filter(item -> item.getProduct().getId().equals(productId)).findFirst()
         .orElseThrow(() -> new ResourceNotFoundException("CartItem", "productId", productId.toString()));
@@ -96,14 +79,8 @@ public class CartServiceImpl implements CartService {
   @Transactional
   @Override
   public CartDto updateQuantity(Long cartId, Long productId, int quantity) {
-    CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new ResourceNotFoundException("Cart", cartId));
-    CurrentUser currentUser = securityUtils.getCurrentUser();
-    if (!cart.getUser().getId().equals(currentUser.id()) && !securityUtils.isAdmin()) {
-      throw new AccessDeniedException("Access denied");
-    }
-    if (!cart.isActive()) {
-      throw new InvalidOperationException("Cart is not active");
-    }
+    CartEntity cart = validateCartAccess(cartId);
+    validateCartActive(cart);
     CartItemEntity existingItem = cart.getItems().stream()
         .filter(item -> item.getProduct().getId().equals(productId)).findFirst()
         .orElseThrow(() -> new ResourceNotFoundException("CartItem", "productId", productId.toString()));
@@ -115,16 +92,23 @@ public class CartServiceImpl implements CartService {
   @Transactional
   @Override
   public void clearCart(Long cartId) {
-    CartEntity cart = cartRepository.findById(cartId).orElseThrow(() -> new ResourceNotFoundException("Cart", cartId));
-    CurrentUser currentUser = securityUtils.getCurrentUser();
-    if (!cart.getUser().getId().equals(currentUser.id()) && !securityUtils.isAdmin()) {
-      throw new AccessDeniedException("Access denied");
-    }
+    CartEntity cart = validateCartAccess(cartId);
+    validateCartActive(cart);
+    cart.clear();
+    cartRepository.save(cart);
+  }
+
+  private CartEntity validateCartAccess(Long cartId) {
+    CartEntity cart = cartRepository.findById(cartId)
+        .orElseThrow(() -> new ResourceNotFoundException("Cart", cartId));
+    securityUtils.assertOwnerOrAdmin(cart.getUser().getId());
+    return cart;
+  }
+
+  private void validateCartActive(CartEntity cart) {
     if (!cart.isActive()) {
       throw new InvalidOperationException("Cart is not active");
     }
-    cart.clear();
-    cartRepository.save(cart);
   }
 
 }

@@ -15,8 +15,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
+import com.lautarorisso.eCommerce_api.dto.request.CreateUserRequest;
 import com.lautarorisso.eCommerce_api.dto.request.LoginRequest;
-import com.lautarorisso.eCommerce_api.dto.request.RegisterRequest;
 import com.lautarorisso.eCommerce_api.dto.response.AuthResponse;
 import com.lautarorisso.eCommerce_api.dto.response.UserDto;
 import com.lautarorisso.eCommerce_api.enums.Role;
@@ -66,7 +66,7 @@ class AuthenticationServiceTest {
   @Test
   @DisplayName("register - should create user and return AuthResponse")
   void register_withValidData_returnsAuthResponse() {
-    var request = new RegisterRequest("johndoe", "user@example.com", "password123");
+    var request = new CreateUserRequest("johndoe", "user@example.com", "password123", Role.USER);
     var user = new UserEntity("johndoe", "user@example.com", "encoded", Role.USER);
 
     when(userService.createUser(any())).thenReturn(new UserDto(1L, "johndoe", "user@example.com", Role.USER));
@@ -84,7 +84,7 @@ class AuthenticationServiceTest {
   @Test
   @DisplayName("register - should throw DuplicateResourceException when email already exists")
   void register_withDuplicateEmail_throwsException() {
-    var request = new RegisterRequest("johndoe", "existing@example.com", "password123");
+    var request = new CreateUserRequest("johndoe", "existing@example.com", "password123", Role.USER);
 
     when(userService.createUser(any())).thenThrow(new DuplicateResourceException("User", "email", "existing@example.com"));
 

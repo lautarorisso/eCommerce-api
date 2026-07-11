@@ -8,9 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.lautarorisso.eCommerce_api.dto.request.CreateUserRequest;
 import com.lautarorisso.eCommerce_api.dto.request.LoginRequest;
-import com.lautarorisso.eCommerce_api.dto.request.RegisterRequest;
 import com.lautarorisso.eCommerce_api.dto.response.AuthResponse;
-import com.lautarorisso.eCommerce_api.enums.Role;
 import com.lautarorisso.eCommerce_api.model.UserEntity;
 import com.lautarorisso.eCommerce_api.repository.UserRepository;
 import com.lautarorisso.eCommerce_api.security.JwtService;
@@ -40,10 +38,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
   @Transactional
   @Override
-  public AuthResponse register(RegisterRequest request) {
-    var createRequest = new CreateUserRequest(
-        request.username(), request.email(), request.password(), Role.USER);
-    userService.createUser(createRequest);
+  public AuthResponse register(CreateUserRequest request) {
+    userService.createUser(request);
     UserEntity user = userRepository.findByEmail(request.email()).orElseThrow();
     return buildAuthResponse(user);
   }

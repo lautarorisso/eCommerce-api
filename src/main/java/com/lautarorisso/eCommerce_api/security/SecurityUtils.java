@@ -23,4 +23,16 @@ public class SecurityUtils {
   public boolean isAdmin() {
     return "ADMIN".equals(getCurrentUser().role());
   }
+
+  public void assertOwnerOrAdmin(Long ownerId) {
+    if (!getCurrentUserId().equals(ownerId) && !isAdmin()) {
+      throw new AccessDeniedException("Access denied");
+    }
+  }
+
+  public void assertAdmin() {
+    if (!isAdmin()) {
+      throw new AccessDeniedException("Admin access required");
+    }
+  }
 }

@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.lautarorisso.eCommerce_api.dto.request.CreateUserRequest;
 import com.lautarorisso.eCommerce_api.dto.request.LoginRequest;
-import com.lautarorisso.eCommerce_api.dto.request.RegisterRequest;
 import com.lautarorisso.eCommerce_api.dto.response.AuthResponse;
 import com.lautarorisso.eCommerce_api.service.AuthenticationService;
 
@@ -45,7 +45,7 @@ public class AuthController {
       @ApiResponse(responseCode = "400", description = "Invalid input"),
       @ApiResponse(responseCode = "409", description = "Email already in use")
   })
-  public AuthResponse register(@Valid @RequestBody RegisterRequest request) {
+  public AuthResponse register(@Valid @RequestBody CreateUserRequest request) {
     return authService.register(request);
   }
 }

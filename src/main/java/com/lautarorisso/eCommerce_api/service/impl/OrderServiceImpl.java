@@ -6,7 +6,6 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +23,6 @@ import com.lautarorisso.eCommerce_api.model.ProductEntity;
 import com.lautarorisso.eCommerce_api.repository.CartRepository;
 import com.lautarorisso.eCommerce_api.repository.OrderRepository;
 import com.lautarorisso.eCommerce_api.repository.ProductRepository;
-import com.lautarorisso.eCommerce_api.security.CurrentUser;
 import com.lautarorisso.eCommerce_api.security.SecurityUtils;
 import com.lautarorisso.eCommerce_api.service.OrderService;
 import com.lautarorisso.eCommerce_api.specification.OrderSpecification;
@@ -48,10 +46,7 @@ public class OrderServiceImpl implements OrderService {
     if (!cart.isActive()) {
       throw new InvalidOperationException("Cart is not active");
     }
-    CurrentUser currentUser = securityUtils.getCurrentUser();
-    if (!cart.getUser().getId().equals(currentUser.id()) && !securityUtils.isAdmin()) {
-      throw new AccessDeniedException("Access denied");
-    }
+    securityUtils.assertOwnerOrAdmin(cart.getUser().getId());
     if (cart.isEmpty()) {
       throw new InvalidOperationException("Cart is empty");
     }
@@ -61,8 +56,8 @@ public class OrderServiceImpl implements OrderService {
       if (product.getStock() < cartItem.getQuantity()) {
         throw new InsufficientResourcesException(product.getName(), cartItem.getQuantity(), product.getStock());
       }
-      OrderItemEntity orderItem = new OrderItemEntity(order, cartItem.getProduct(), cartItem.getUnitPrice(),
-          cartItem.getQuantity());
+      OrderItemEntity orderItem = new OrderItemEntity(order, cartItem.getProduct(), cartItem.getQuantity(),
+          cartItem.getUnitPrice());
       order.addItem(orderItem);
     }
     cart.clear();
@@ -74,10 +69,7 @@ public class OrderServiceImpl implements OrderService {
   @Override
   public Page<OrderDto> getAllOrders(Long userId, OrderStatus status, BigDecimal minTotal, BigDecimal maxTotal,
       Pageable pageable) {
-    CurrentUser currentUser = securityUtils.getCurrentUser();
-    if (!currentUser.id().equals(userId) && !securityUtils.isAdmin()) {
-      throw new AccessDeniedException("Access denied");
-    }
+    securityUtils.assertOwnerOrAdmin(userId);
     Specification<OrderEntity> spec = Specification
         .where(OrderSpecification.userIdEquals(userId))
         .and(OrderSpecification.statusEquals(status))
@@ -90,10 +82,7 @@ public class OrderServiceImpl implements OrderService {
   public OrderDto getOrderById(Long orderId) {
     OrderEntity order = orderRepository.findById(orderId)
         .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
-    CurrentUser currentUser = securityUtils.getCurrentUser();
-    if (!order.getUser().getId().equals(currentUser.id()) && !securityUtils.isAdmin()) {
-      throw new AccessDeniedException("Access denied");
-    }
+    securityUtils.assertOwnerOrAdmin(order.getUser().getId());
     return orderMapper.toDto(order);
   }
 
@@ -102,10 +91,7 @@ public class OrderServiceImpl implements OrderService {
   public void cancelOrder(Long orderId) {
     OrderEntity order = orderRepository.findById(orderId)
         .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
-    CurrentUser currentUser = securityUtils.getCurrentUser();
-    if (!order.getUser().getId().equals(currentUser.id()) && !securityUtils.isAdmin()) {
-      throw new AccessDeniedException("Access denied");
-    }
+    securityUtils.assertOwnerOrAdmin(order.getUser().getId());
     order.cancel();
     orderRepository.save(order);
   }
@@ -115,10 +101,7 @@ public class OrderServiceImpl implements OrderService {
   public void payOrder(Long orderId) {
     OrderEntity order = orderRepository.findById(orderId)
         .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
-    CurrentUser currentUser = securityUtils.getCurrentUser();
-    if (!order.getUser().getId().equals(currentUser.id()) && !securityUtils.isAdmin()) {
-      throw new AccessDeniedException("Access denied");
-    }
+    securityUtils.assertOwnerOrAdmin(order.getUser().getId());
     List<ProductEntity> products = order.getItems().stream()
         .map(item -> {
           try {
@@ -140,9 +123,7 @@ public class OrderServiceImpl implements OrderService {
   public void shipOrder(Long orderId) {
     OrderEntity order = orderRepository.findById(orderId)
         .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
-    if (!securityUtils.isAdmin()) {
-      throw new AccessDeniedException("Only admins can ship orders");
-    }
+    securityUtils.assertAdmin();
     order.markAsShipped();
     orderRepository.save(order);
   }
@@ -152,9 +133,7 @@ public class OrderServiceImpl implements OrderService {
   public void deliverOrder(Long orderId) {
     OrderEntity order = orderRepository.findById(orderId)
         .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
-    if (!securityUtils.isAdmin()) {
-      throw new AccessDeniedException("Only admins can deliver orders");
-    }
+    securityUtils.assertAdmin();
     order.markAsDelivered();
     orderRepository.save(order);
   }

@@ -27,7 +27,6 @@ import com.lautarorisso.eCommerce_api.model.ProductEntity;
 import com.lautarorisso.eCommerce_api.model.UserEntity;
 import com.lautarorisso.eCommerce_api.repository.CartRepository;
 import com.lautarorisso.eCommerce_api.repository.ProductRepository;
-import com.lautarorisso.eCommerce_api.security.CurrentUser;
 import com.lautarorisso.eCommerce_api.security.SecurityUtils;
 import com.lautarorisso.eCommerce_api.service.impl.CartServiceImpl;
 
@@ -51,7 +50,6 @@ class CartServiceTest {
 
   private UserEntity user;
   private ProductEntity product;
-  private CurrentUser currentUser;
   private CartDto cartDto;
 
   @BeforeEach
@@ -63,8 +61,6 @@ class CartServiceTest {
     product = new ProductEntity("Mouse", "Wireless mouse", BigDecimal.valueOf(29.99), 100);
     ReflectionTestUtils.setField(product, "id", 1L);
 
-    currentUser = new CurrentUser(1L, "user@example.com", "USER");
-
     cartDto = new CartDto(1L, java.util.List.of(), CartStatus.ACTIVE, BigDecimal.ZERO);
   }
 
@@ -74,7 +70,7 @@ class CartServiceTest {
     var cart = new CartEntity(user);
 
     when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
-    when(securityUtils.getCurrentUser()).thenReturn(currentUser);
+    doNothing().when(securityUtils).assertOwnerOrAdmin(anyLong());
     when(productRepository.findById(1L)).thenReturn(Optional.of(product));
     when(cartMapper.toDto(cart)).thenReturn(cartDto);
 
@@ -91,7 +87,7 @@ class CartServiceTest {
     var cart = new CartEntity(user);
 
     when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
-    when(securityUtils.getCurrentUser()).thenReturn(currentUser);
+    doNothing().when(securityUtils).assertOwnerOrAdmin(anyLong());
     when(productRepository.findById(1L)).thenReturn(Optional.of(product));
 
     assertThrows(InsufficientResourcesException.class, () -> cartService.addProduct(1L, 1L, 200));
@@ -105,7 +101,7 @@ class CartServiceTest {
     cart.abandon();
 
     when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
-    when(securityUtils.getCurrentUser()).thenReturn(currentUser);
+    doNothing().when(securityUtils).assertOwnerOrAdmin(anyLong());
 
     assertThrows(InvalidOperationException.class, () -> cartService.addProduct(1L, 1L, 2));
     verify(cartRepository, never()).save(any());

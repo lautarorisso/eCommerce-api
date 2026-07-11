@@ -29,7 +29,6 @@ import com.lautarorisso.eCommerce_api.model.UserEntity;
 import com.lautarorisso.eCommerce_api.repository.CartRepository;
 import com.lautarorisso.eCommerce_api.repository.OrderRepository;
 import com.lautarorisso.eCommerce_api.repository.ProductRepository;
-import com.lautarorisso.eCommerce_api.security.CurrentUser;
 import com.lautarorisso.eCommerce_api.security.SecurityUtils;
 import com.lautarorisso.eCommerce_api.service.impl.OrderServiceImpl;
 
@@ -56,7 +55,6 @@ class OrderServiceTest {
 
   private UserEntity user;
   private ProductEntity product;
-  private CurrentUser currentUser;
   private OrderDto orderDto;
 
   @BeforeEach
@@ -66,8 +64,6 @@ class OrderServiceTest {
     ReflectionTestUtils.setField(user, "id", 1L);
 
     product = new ProductEntity("Mouse", "Wireless mouse", BigDecimal.valueOf(29.99), 100);
-
-    currentUser = new CurrentUser(1L, "user@example.com", "USER");
 
     orderDto = new OrderDto(1L, java.util.List.of(), BigDecimal.valueOf(59.98), OrderStatus.PENDING, null, 1L);
   }
@@ -80,7 +76,7 @@ class OrderServiceTest {
     cart.addItem(item);
 
     when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
-    when(securityUtils.getCurrentUser()).thenReturn(currentUser);
+    doNothing().when(securityUtils).assertOwnerOrAdmin(anyLong());
     when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
     when(orderMapper.toDto(any())).thenReturn(orderDto);
 
@@ -97,7 +93,7 @@ class OrderServiceTest {
     var cart = new CartEntity(user);
 
     when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
-    when(securityUtils.getCurrentUser()).thenReturn(currentUser);
+    doNothing().when(securityUtils).assertOwnerOrAdmin(anyLong());
 
     assertThrows(InvalidOperationException.class, () -> orderService.createOrder(1L));
     verify(orderRepository, never()).save(any());
@@ -112,7 +108,7 @@ class OrderServiceTest {
     cart.addItem(item);
 
     when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
-    when(securityUtils.getCurrentUser()).thenReturn(currentUser);
+    doNothing().when(securityUtils).assertOwnerOrAdmin(anyLong());
 
     assertThrows(InsufficientResourcesException.class, () -> orderService.createOrder(1L));
     verify(orderRepository, never()).save(any());
@@ -122,10 +118,10 @@ class OrderServiceTest {
   @DisplayName("payOrder - should mark order as paid and decrease stock")
   void payOrder_whenPending_marksAsPaid() {
     var order = new OrderEntity(user);
-    order.addItem(new com.lautarorisso.eCommerce_api.model.OrderItemEntity(order, product, BigDecimal.valueOf(29.99), 2));
+    order.addItem(new com.lautarorisso.eCommerce_api.model.OrderItemEntity(order, product, 2, BigDecimal.valueOf(29.99)));
 
     when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-    when(securityUtils.getCurrentUser()).thenReturn(currentUser);
+    doNothing().when(securityUtils).assertOwnerOrAdmin(anyLong());
 
     orderService.payOrder(1L);
 
