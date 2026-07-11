@@ -40,6 +40,21 @@ public class ProductEntity {
   private Long version;
 
   public ProductEntity(String name, String description, BigDecimal unitPrice, Integer stock) {
+    if (name == null || name.isBlank()) {
+      throw new IllegalArgumentException("Name cannot be empty");
+    }
+    if (description == null || description.isBlank()) {
+      throw new IllegalArgumentException("Description cannot be empty");
+    }
+    if (unitPrice == null) {
+      throw new IllegalArgumentException("Price cannot be null");
+    }
+    if (unitPrice.compareTo(BigDecimal.ZERO) < 0) {
+      throw new IllegalArgumentException("Price cannot be negative");
+    }
+    if (stock == null || stock < 0) {
+      throw new IllegalArgumentException("Stock cannot be negative");
+    }
     this.name = name;
     this.description = description;
     this.unitPrice = unitPrice;

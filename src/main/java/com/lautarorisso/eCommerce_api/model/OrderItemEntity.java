@@ -32,16 +32,19 @@ public class OrderItemEntity {
   @Column(nullable = false, precision = 10, scale = 2)
   private BigDecimal unitPrice;
   @Column(nullable = false)
-  private Integer quantity;
+  private int quantity;
   @Column(nullable = false, precision = 10, scale = 2)
   private BigDecimal subtotal;
 
-  public OrderItemEntity(OrderEntity order, ProductEntity product, BigDecimal unitPrice, Integer quantity) {
+  public OrderItemEntity(OrderEntity order, ProductEntity product, BigDecimal unitPrice, int quantity) {
     if (order == null) {
       throw new IllegalArgumentException("Order cannot be null");
     }
     if (product == null) {
       throw new IllegalArgumentException("Product cannot be null");
+    }
+    if (unitPrice == null) {
+      throw new IllegalArgumentException("Unit price cannot be null");
     }
     if (unitPrice.compareTo(BigDecimal.ZERO) <= 0) {
       throw new IllegalArgumentException("Unit price must be positive");

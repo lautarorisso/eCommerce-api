@@ -32,11 +32,11 @@ public class CartItemEntity {
   @JoinColumn(name = "product_id", nullable = false)
   private ProductEntity product;
   @Column(nullable = false)
-  private Integer quantity;
+  private int quantity;
   @Column(nullable = false, precision = 10, scale = 2)
   private BigDecimal unitPrice;
 
-  public CartItemEntity(CartEntity cart, ProductEntity product, Integer quantity, BigDecimal unitPrice) {
+  public CartItemEntity(CartEntity cart, ProductEntity product, int quantity, BigDecimal unitPrice) {
     if (cart == null) {
       throw new IllegalArgumentException("Cart cannot be null");
     }

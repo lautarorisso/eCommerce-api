@@ -48,6 +48,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     String email = claims.getSubject();
     Long userId = claims.get("userId", Long.class);
     String role = claims.get("role", String.class);
+    if (email == null || userId == null || role == null) {
+      log.warn("JWT token missing required claims");
+      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+      response.setContentType("application/json");
+      response.getWriter().write("{\"error\":\"Invalid token: missing claims\"}");
+      return;
+    }
     var authentication = new UsernamePasswordAuthenticationToken(
         email, null, List.of(new SimpleGrantedAuthority("ROLE_" + role)));
     authentication.setDetails(new CurrentUser(userId, email, role));

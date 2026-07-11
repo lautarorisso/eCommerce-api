@@ -49,6 +49,10 @@ public class UserEntity {
       throw new IllegalArgumentException("Password cannot be empty");
     }
 
+    if (role == null) {
+      throw new IllegalArgumentException("Role cannot be null");
+    }
+
     this.username = username;
     this.email = email;
     this.password = password;
