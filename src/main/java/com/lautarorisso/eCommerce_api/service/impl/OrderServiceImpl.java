@@ -54,7 +54,7 @@ public class OrderServiceImpl implements OrderService {
     for (CartItemEntity cartItem : cart.getItems()) {
       ProductEntity product = cartItem.getProduct();
       if (product.getStock() < cartItem.getQuantity()) {
-        throw new InsufficientResourcesException(product.getName(), cartItem.getQuantity(), product.getStock());
+        throw new InsufficientResourcesException(product.getName());
       }
       OrderItemEntity orderItem = new OrderItemEntity(order, cartItem.getProduct(), cartItem.getQuantity(),
           cartItem.getUnitPrice());
@@ -107,8 +107,7 @@ public class OrderServiceImpl implements OrderService {
           try {
             item.getProduct().decreaseStock(item.getQuantity());
           } catch (IllegalArgumentException e) {
-            throw new InsufficientResourcesException(item.getProduct().getName(),
-                item.getQuantity(), item.getProduct().getStock());
+            throw new InsufficientResourcesException(item.getProduct().getName());
           }
           return item.getProduct();
         })

@@ -63,7 +63,7 @@ public class CartItemEntity {
       throw new IllegalArgumentException("Quantity must be positive");
     }
     if (newQuantity > this.product.getStock()) {
-      throw new InsufficientResourcesException(this.product.getName(), newQuantity, this.product.getStock());
+      throw new InsufficientResourcesException(this.product.getName());
     }
     this.quantity = newQuantity;
   }

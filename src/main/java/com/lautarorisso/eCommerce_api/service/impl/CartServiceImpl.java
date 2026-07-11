@@ -51,7 +51,7 @@ public class CartServiceImpl implements CartService {
         .filter(item -> item.getProduct().getId().equals(productId)).findFirst();
     int totalQty = existingItem.map(CartItemEntity::getQuantity).orElse(0) + quantity;
     if (totalQty > product.getStock()) {
-      throw new InsufficientResourcesException(product.getName(), totalQty, product.getStock());
+      throw new InsufficientResourcesException(product.getName());
     }
     if (existingItem.isPresent()) {
       existingItem.get().changeQuantity(totalQty);
