@@ -97,4 +97,16 @@ class ProductServiceTest {
     assertEquals(150, product.getStock());
     verify(productRepository).save(product);
   }
+
+  @Test
+  @DisplayName("getProductById - should return product when found")
+  void getProductById_whenFound_returnsDto() {
+    when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+    when(productMapper.toDto(product)).thenReturn(productDto);
+
+    var result = productService.getProductById(1L);
+
+    assertEquals("Mouse", result.name());
+    verify(productRepository).findById(1L);
+  }
 }

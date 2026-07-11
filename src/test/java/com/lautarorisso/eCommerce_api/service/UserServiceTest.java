@@ -90,4 +90,31 @@ class UserServiceTest {
     assertThrows(InvalidOperationException.class, () -> userService.deleteUser(1L));
     verify(userRepository, never()).deleteById(any());
   }
+
+  @Test
+  @DisplayName("getUserById - should return user when found")
+  void getUserById_whenFound_returnsDto() {
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    when(userMapper.toDto(user)).thenReturn(userDto);
+
+    var result = userService.getUserById(1L);
+
+    assertEquals("johndoe", result.username());
+    verify(userRepository).findById(1L);
+  }
+
+  @Test
+  @DisplayName("updateUser - should update user fields")
+  void updateUser_withValidData_updatesSuccessfully() {
+    var updateRequest = new com.lautarorisso.eCommerce_api.dto.request.UpdateUserRequest("janedoe", null);
+
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    when(userRepository.save(any())).thenReturn(user);
+    when(userMapper.toDto(user)).thenReturn(new UserDto(1L, "janedoe", "user@example.com", Role.USER));
+
+    var result = userService.updateUser(1L, updateRequest);
+
+    assertEquals("janedoe", result.username());
+    verify(userRepository).save(any());
+  }
 }

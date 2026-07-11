@@ -77,4 +77,16 @@ class CategoryServiceTest {
 
     verify(categoryRepository, never()).delete(any());
   }
+
+  @Test
+  @DisplayName("getCategoryById - should return category when found")
+  void getCategoryById_whenFound_returnsDto() {
+    when(categoryRepository.findById(1L)).thenReturn(Optional.of(electronics));
+    when(categoryMapper.toDto(electronics)).thenReturn(electronicsDto);
+
+    var result = categoryService.getCategoryById(1L);
+
+    assertEquals("Electronics", result.name());
+    verify(categoryRepository).findById(1L);
+  }
 }

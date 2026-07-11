@@ -129,4 +129,33 @@ class OrderServiceTest {
     verify(orderRepository).save(order);
     verify(productRepository).saveAll(any());
   }
+
+  @Test
+  @DisplayName("cancelOrder - should cancel a pending order")
+  void cancelOrder_whenPending_cancelsSuccessfully() {
+    var order = new OrderEntity(user);
+
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    doNothing().when(securityUtils).assertOwnerOrAdmin(anyLong());
+
+    orderService.cancelOrder(1L);
+
+    assertEquals(OrderStatus.CANCELLED, order.getStatus());
+    verify(orderRepository).save(order);
+  }
+
+  @Test
+  @DisplayName("getOrderById - should return order when found")
+  void getOrderById_whenFound_returnsOrder() {
+    var order = new OrderEntity(user);
+
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    doNothing().when(securityUtils).assertOwnerOrAdmin(anyLong());
+    when(orderMapper.toDto(order)).thenReturn(orderDto);
+
+    var result = orderService.getOrderById(1L);
+
+    assertNotNull(result);
+    assertEquals(OrderStatus.PENDING, result.status());
+  }
 }

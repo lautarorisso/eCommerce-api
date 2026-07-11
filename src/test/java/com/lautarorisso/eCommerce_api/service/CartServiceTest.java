@@ -20,6 +20,7 @@ import com.lautarorisso.eCommerce_api.dto.response.CartDto;
 import com.lautarorisso.eCommerce_api.enums.CartStatus;
 import com.lautarorisso.eCommerce_api.exceptions.InsufficientResourcesException;
 import com.lautarorisso.eCommerce_api.exceptions.InvalidOperationException;
+import com.lautarorisso.eCommerce_api.exceptions.ResourceNotFoundException;
 import com.lautarorisso.eCommerce_api.mapper.CartMapper;
 import com.lautarorisso.eCommerce_api.model.CartEntity;
 import com.lautarorisso.eCommerce_api.model.CartItemEntity;
@@ -105,5 +106,51 @@ class CartServiceTest {
 
     assertThrows(InvalidOperationException.class, () -> cartService.addProduct(1L, 1L, 2));
     verify(cartRepository, never()).save(any());
+  }
+
+  @Test
+  @DisplayName("removeProduct - should remove item from cart")
+  void removeProduct_withValidData_removesItem() {
+    var cart = new CartEntity(user);
+    var item = new CartItemEntity(cart, product, 2, product.getUnitPrice());
+    cart.addItem(item);
+
+    when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
+    doNothing().when(securityUtils).assertOwnerOrAdmin(anyLong());
+    when(cartMapper.toDto(cart)).thenReturn(cartDto);
+
+    var result = cartService.removeProduct(1L, 1L);
+
+    assertNotNull(result);
+    assertEquals(0, cart.getItems().size());
+    verify(cartRepository).save(cart);
+  }
+
+  @Test
+  @DisplayName("removeProduct - should throw ResourceNotFoundException when item not in cart")
+  void removeProduct_withNonExistentItem_throwsException() {
+    var cart = new CartEntity(user);
+
+    when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
+    doNothing().when(securityUtils).assertOwnerOrAdmin(anyLong());
+
+    assertThrows(ResourceNotFoundException.class, () -> cartService.removeProduct(1L, 999L));
+    verify(cartRepository, never()).save(any());
+  }
+
+  @Test
+  @DisplayName("clearCart - should clear all items from cart")
+  void clearCart_withValidData_clearsItems() {
+    var cart = new CartEntity(user);
+    var item = new CartItemEntity(cart, product, 2, product.getUnitPrice());
+    cart.addItem(item);
+
+    when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
+    doNothing().when(securityUtils).assertOwnerOrAdmin(anyLong());
+
+    cartService.clearCart(1L);
+
+    assertEquals(0, cart.getItems().size());
+    verify(cartRepository).save(cart);
   }
 }
