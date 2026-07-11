@@ -46,6 +46,12 @@ public class CartItemEntity {
     if (quantity <= 0) {
       throw new IllegalArgumentException("Quantity must be positive");
     }
+    if (unitPrice == null) {
+      throw new IllegalArgumentException("Unit price cannot be null");
+    }
+    if (unitPrice.compareTo(BigDecimal.ZERO) <= 0) {
+      throw new IllegalArgumentException("Unit price must be positive");
+    }
     this.cart = cart;
     this.product = product;
     this.quantity = quantity;

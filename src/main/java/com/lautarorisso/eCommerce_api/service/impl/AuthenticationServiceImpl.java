@@ -3,21 +3,19 @@ package com.lautarorisso.eCommerce_api.service.impl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.lautarorisso.eCommerce_api.dto.request.CreateUserRequest;
 import com.lautarorisso.eCommerce_api.dto.request.LoginRequest;
 import com.lautarorisso.eCommerce_api.dto.request.RegisterRequest;
 import com.lautarorisso.eCommerce_api.dto.response.AuthResponse;
 import com.lautarorisso.eCommerce_api.enums.Role;
-import com.lautarorisso.eCommerce_api.exceptions.DuplicateResourceException;
-import com.lautarorisso.eCommerce_api.model.CartEntity;
 import com.lautarorisso.eCommerce_api.model.UserEntity;
-import com.lautarorisso.eCommerce_api.repository.CartRepository;
 import com.lautarorisso.eCommerce_api.repository.UserRepository;
 import com.lautarorisso.eCommerce_api.security.JwtService;
 import com.lautarorisso.eCommerce_api.service.AuthenticationService;
+import com.lautarorisso.eCommerce_api.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,8 +26,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
   private final AuthenticationManager authenticationManager;
   private final JwtService jwtService;
   private final UserRepository userRepository;
-  private final CartRepository cartRepository;
-  private final PasswordEncoder passwordEncoder;
+  private final UserService userService;
 
   @Transactional(readOnly = true)
   @Override
@@ -44,13 +41,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
   @Transactional
   @Override
   public AuthResponse register(RegisterRequest request) {
-    if (userRepository.existsByEmail(request.email())) {
-      throw new DuplicateResourceException("User", "email", request.email());
-    }
-    String hashedPassword = passwordEncoder.encode(request.password());
-    UserEntity user = new UserEntity(request.username(), request.email(), hashedPassword, Role.USER);
-    userRepository.save(user);
-    cartRepository.save(new CartEntity(user));
+    var createRequest = new CreateUserRequest(
+        request.username(), request.email(), request.password(), Role.USER);
+    userService.createUser(createRequest);
+    UserEntity user = userRepository.findByEmail(request.email()).orElseThrow();
     return buildAuthResponse(user);
   }
 

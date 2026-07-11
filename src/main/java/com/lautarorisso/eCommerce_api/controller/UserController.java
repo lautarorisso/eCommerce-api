@@ -62,18 +62,6 @@ public class UserController {
     return userService.getUserById(userId);
   }
 
-  @GetMapping("/email/{email}")
-  @Operation(summary = "Get user by email", description = "Returns a single user by email (admin only)")
-  @ApiResponses({
-      @ApiResponse(responseCode = "200", description = "User found"),
-      @ApiResponse(responseCode = "401", description = "Unauthorized"),
-      @ApiResponse(responseCode = "403", description = "Forbidden — requires ADMIN role"),
-      @ApiResponse(responseCode = "404", description = "User not found")
-  })
-  public UserDto getUserByEmail(@PathVariable String email) {
-    return userService.getUserByEmail(email);
-  }
-
   @GetMapping("/me")
   @Operation(summary = "Get current user", description = "Returns the authenticated user's profile")
   @ApiResponses({

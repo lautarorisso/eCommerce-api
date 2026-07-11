@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,14 +14,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.lautarorisso.eCommerce_api.dto.request.LoginRequest;
 import com.lautarorisso.eCommerce_api.dto.request.RegisterRequest;
 import com.lautarorisso.eCommerce_api.dto.response.AuthResponse;
+import com.lautarorisso.eCommerce_api.dto.response.UserDto;
+import com.lautarorisso.eCommerce_api.enums.Role;
 import com.lautarorisso.eCommerce_api.exceptions.DuplicateResourceException;
 import com.lautarorisso.eCommerce_api.model.UserEntity;
-import com.lautarorisso.eCommerce_api.repository.CartRepository;
 import com.lautarorisso.eCommerce_api.repository.UserRepository;
 import com.lautarorisso.eCommerce_api.security.JwtService;
 import com.lautarorisso.eCommerce_api.service.impl.AuthenticationServiceImpl;
@@ -37,10 +39,7 @@ class AuthenticationServiceTest {
   private UserRepository userRepository;
 
   @Mock
-  private CartRepository cartRepository;
-
-  @Mock
-  private PasswordEncoder passwordEncoder;
+  private UserService userService;
 
   @InjectMocks
   private AuthenticationServiceImpl authService;
@@ -50,10 +49,10 @@ class AuthenticationServiceTest {
   void login_withValidCredentials_returnsAuthResponse() {
     var loginRequest = new LoginRequest("user@example.com", "password123");
     var authToken = new UsernamePasswordAuthenticationToken("user@example.com", "password123");
-    var user = new UserEntity("johndoe", "user@example.com", "encoded", com.lautarorisso.eCommerce_api.enums.Role.USER);
+    var user = new UserEntity("johndoe", "user@example.com", "encoded", Role.USER);
 
     when(authenticationManager.authenticate(any())).thenReturn(authToken);
-    when(userRepository.findByEmail("user@example.com")).thenReturn(java.util.Optional.of(user));
+    when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
     when(jwtService.createToken(user.getId(), user.getEmail(), user.getRole().name())).thenReturn("jwt-token");
 
     AuthResponse response = authService.login(loginRequest);
@@ -68,22 +67,18 @@ class AuthenticationServiceTest {
   @DisplayName("register - should create user and return AuthResponse")
   void register_withValidData_returnsAuthResponse() {
     var request = new RegisterRequest("johndoe", "user@example.com", "password123");
-    var user = new UserEntity("johndoe", "user@example.com", "encoded", com.lautarorisso.eCommerce_api.enums.Role.USER);
+    var user = new UserEntity("johndoe", "user@example.com", "encoded", Role.USER);
 
-    when(userRepository.existsByEmail("user@example.com")).thenReturn(false);
-    when(passwordEncoder.encode("password123")).thenReturn("encoded");
-    when(userRepository.save(any())).thenReturn(user);
-    when(cartRepository.save(any())).thenReturn(null);
+    when(userService.createUser(any())).thenReturn(new UserDto(1L, "johndoe", "user@example.com", Role.USER));
+    when(userRepository.findByEmail("user@example.com")).thenReturn(Optional.of(user));
     when(jwtService.createToken(user.getId(), user.getEmail(), user.getRole().name())).thenReturn("jwt-token");
 
     AuthResponse response = authService.register(request);
 
     assertNotNull(response);
     assertEquals("jwt-token", response.token());
-    verify(userRepository).existsByEmail("user@example.com");
-    verify(passwordEncoder).encode("password123");
-    verify(userRepository).save(any());
-    verify(cartRepository).save(any());
+    verify(userService).createUser(any());
+    verify(userRepository).findByEmail("user@example.com");
   }
 
   @Test
@@ -91,10 +86,9 @@ class AuthenticationServiceTest {
   void register_withDuplicateEmail_throwsException() {
     var request = new RegisterRequest("johndoe", "existing@example.com", "password123");
 
-    when(userRepository.existsByEmail("existing@example.com")).thenReturn(true);
+    when(userService.createUser(any())).thenThrow(new DuplicateResourceException("User", "email", "existing@example.com"));
 
     assertThrows(DuplicateResourceException.class, () -> authService.register(request));
-    verify(userRepository).existsByEmail("existing@example.com");
-    verify(userRepository, never()).save(any());
+    verify(userService).createUser(any());
   }
 }

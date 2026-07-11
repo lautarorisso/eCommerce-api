@@ -15,7 +15,6 @@ import com.lautarorisso.eCommerce_api.exceptions.DuplicateResourceException;
 import com.lautarorisso.eCommerce_api.exceptions.InvalidOperationException;
 import com.lautarorisso.eCommerce_api.exceptions.ResourceNotFoundException;
 import com.lautarorisso.eCommerce_api.mapper.UserMapper;
-import com.lautarorisso.eCommerce_api.enums.CartStatus;
 import com.lautarorisso.eCommerce_api.model.CartEntity;
 import com.lautarorisso.eCommerce_api.model.UserEntity;
 import com.lautarorisso.eCommerce_api.repository.CartRepository;
@@ -45,7 +44,8 @@ public class UserServiceImpl implements UserService {
       throw new DuplicateResourceException("User", "email", request.email());
     }
     String hashedPassword = passwordEncoder.encode(request.password());
-    UserEntity user = new UserEntity(request.username(), request.email(), hashedPassword, Role.USER);
+    Role role = request.role() != null ? request.role() : Role.USER;
+    UserEntity user = new UserEntity(request.username(), request.email(), hashedPassword, role);
     UserEntity savedUser = userRepository.save(user);
     cartRepository.save(new CartEntity(savedUser));
     return userMapper.toDto(savedUser);
@@ -89,8 +89,10 @@ public class UserServiceImpl implements UserService {
   @Transactional
   @Override
   public void deleteUser(Long userId) {
-    if (!userRepository.existsById(userId)) {
-      throw new ResourceNotFoundException("User", userId);
+    UserEntity user = userRepository.findById(userId)
+        .orElseThrow(() -> new ResourceNotFoundException("User", userId));
+    if (user.getRole() == Role.ADMIN && userRepository.countByRole(Role.ADMIN) <= 1) {
+      throw new InvalidOperationException("Cannot delete the last admin user");
     }
     var cart = cartRepository.findByUserId(userId);
     if (cart.isPresent() && cart.get().isActive()) {
@@ -107,14 +109,6 @@ public class UserServiceImpl implements UserService {
   public UserDto getCurrentUser() {
     Long currentUserId = securityUtils.getCurrentUserId();
     return getUserById(currentUserId);
-  }
-
-  @Transactional(readOnly = true)
-  @Override
-  public UserDto getUserByEmail(String email) {
-    UserEntity user = userRepository.findByEmail(email)
-        .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
-    return userMapper.toDto(user);
   }
 
 }

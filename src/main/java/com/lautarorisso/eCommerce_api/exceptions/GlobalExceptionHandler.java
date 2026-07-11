@@ -130,6 +130,13 @@ public class GlobalExceptionHandler {
         .body(new ValidationErrorResponse(HttpStatus.BAD_REQUEST.value(), "Validation failed", errors));
   }
 
+  @ExceptionHandler(Exception.class)
+  public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
+    log.error("Unexpected error: {}", ex.getMessage(), ex);
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .body(new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "An unexpected error occurred"));
+  }
+
   public record ErrorResponse(int status, String message, LocalDateTime timestamp) {
     public ErrorResponse(int status, String message) {
       this(status, message, LocalDateTime.now());

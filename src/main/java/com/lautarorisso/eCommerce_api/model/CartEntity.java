@@ -41,7 +41,7 @@ public class CartEntity {
   @JoinColumn(name = "user_id", nullable = false)
   private UserEntity user;
   @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<CartItemEntity> items = new ArrayList<>();
+  private List<CartItemEntity> items;
   @Enumerated(EnumType.STRING)
   private CartStatus status;
   @Column(nullable = false)

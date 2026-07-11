@@ -49,6 +49,9 @@ public class OrderEntity {
   private LocalDateTime createdAt;
 
   public OrderEntity(UserEntity user) {
+    if (user == null) {
+      throw new IllegalArgumentException("User cannot be null");
+    }
     this.user = user;
     this.items = new ArrayList<>();
     this.totalPrice = BigDecimal.ZERO;
@@ -85,6 +88,9 @@ public class OrderEntity {
   }
 
   public void addItem(OrderItemEntity orderItem) {
+    if (orderItem == null) {
+      throw new IllegalArgumentException("Order item cannot be null");
+    }
     items.add(orderItem);
     this.totalPrice = this.totalPrice.add(orderItem.getSubtotal());
   }

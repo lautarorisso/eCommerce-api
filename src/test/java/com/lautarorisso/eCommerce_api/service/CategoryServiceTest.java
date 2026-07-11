@@ -14,7 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.lautarorisso.eCommerce_api.dto.request.CreateCategoryRequest;
 import com.lautarorisso.eCommerce_api.dto.response.CategoryDto;
-import com.lautarorisso.eCommerce_api.exceptions.ResourceNotFoundException;
+import com.lautarorisso.eCommerce_api.exceptions.InvalidOperationException;
 import com.lautarorisso.eCommerce_api.mapper.CategoryMapper;
 import com.lautarorisso.eCommerce_api.model.CategoryEntity;
 import com.lautarorisso.eCommerce_api.repository.CategoryRepository;
@@ -59,23 +59,22 @@ class CategoryServiceTest {
   @Test
   @DisplayName("deleteCategory - should delete when category exists and has no products")
   void deleteCategory_whenExistsAndNoProducts_deletesSuccessfully() {
-    when(categoryRepository.existsById(1L)).thenReturn(true);
+    when(categoryRepository.findById(1L)).thenReturn(Optional.of(electronics));
     when(productRepository.existsByCategoryId(1L)).thenReturn(false);
 
     categoryService.deleteCategory(1L);
 
-    verify(categoryRepository).deleteById(1L);
+    verify(categoryRepository).delete(electronics);
   }
 
   @Test
   @DisplayName("deleteCategory - should throw InvalidOperationException when category has products")
   void deleteCategory_whenHasProducts_throwsException() {
-    when(categoryRepository.existsById(1L)).thenReturn(true);
+    when(categoryRepository.findById(1L)).thenReturn(Optional.of(electronics));
     when(productRepository.existsByCategoryId(1L)).thenReturn(true);
 
-    assertThrows(com.lautarorisso.eCommerce_api.exceptions.InvalidOperationException.class,
-        () -> categoryService.deleteCategory(1L));
+    assertThrows(InvalidOperationException.class, () -> categoryService.deleteCategory(1L));
 
-    verify(categoryRepository, never()).deleteById(any());
+    verify(categoryRepository, never()).delete(any());
   }
 }

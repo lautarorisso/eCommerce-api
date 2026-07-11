@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 
 import org.springframework.data.jpa.domain.Specification;
 
-import com.lautarorisso.eCommerce_api.model.CategoryEntity;
 import com.lautarorisso.eCommerce_api.model.ProductEntity;
 
 public class ProductSpecification {

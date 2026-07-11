@@ -27,7 +27,6 @@ import com.lautarorisso.eCommerce_api.model.ProductEntity;
 import com.lautarorisso.eCommerce_api.model.UserEntity;
 import com.lautarorisso.eCommerce_api.repository.CartRepository;
 import com.lautarorisso.eCommerce_api.repository.ProductRepository;
-import com.lautarorisso.eCommerce_api.repository.UserRepository;
 import com.lautarorisso.eCommerce_api.security.CurrentUser;
 import com.lautarorisso.eCommerce_api.security.SecurityUtils;
 import com.lautarorisso.eCommerce_api.service.impl.CartServiceImpl;
@@ -40,9 +39,6 @@ class CartServiceTest {
 
   @Mock
   private ProductRepository productRepository;
-
-  @Mock
-  private UserRepository userRepository;
 
   @Mock
   private CartMapper cartMapper;
@@ -113,40 +109,5 @@ class CartServiceTest {
 
     assertThrows(InvalidOperationException.class, () -> cartService.addProduct(1L, 1L, 2));
     verify(cartRepository, never()).save(any());
-  }
-
-  @Test
-  @DisplayName("getMyCart - should create cart when none exists for current user")
-  void getMyCart_whenNoCart_createsAndReturns() {
-    var cart = new CartEntity(user);
-
-    when(securityUtils.getCurrentUserId()).thenReturn(1L);
-    when(cartRepository.findByUserId(1L)).thenReturn(Optional.empty());
-    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-    when(cartRepository.save(any())).thenReturn(cart);
-    when(cartMapper.toDto(cart)).thenReturn(cartDto);
-
-    var result = cartService.getMyCart();
-
-    assertNotNull(result);
-    verify(cartRepository).findByUserId(1L);
-    verify(userRepository).findById(1L);
-    verify(cartRepository).save(any());
-  }
-
-  @Test
-  @DisplayName("clearMyCart - should clear all items from current user's cart")
-  void clearMyCart_withValidData_clearsItems() {
-    var cart = new CartEntity(user);
-    var item = new CartItemEntity(cart, product, 2, product.getUnitPrice());
-    cart.addItem(item);
-
-    when(securityUtils.getCurrentUserId()).thenReturn(1L);
-    when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(cart));
-
-    cartService.clearMyCart();
-
-    assertEquals(0, cart.getItems().size());
-    verify(cartRepository).save(cart);
   }
 }

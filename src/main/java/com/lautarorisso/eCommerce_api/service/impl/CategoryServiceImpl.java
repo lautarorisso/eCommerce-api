@@ -68,12 +68,11 @@ public class CategoryServiceImpl implements CategoryService {
   @Transactional
   @Override
   public void deleteCategory(Long id) {
-    if (!categoryRepository.existsById(id)) {
-      throw new ResourceNotFoundException("Category", id);
-    }
+    CategoryEntity category = categoryRepository.findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException("Category", id));
     if (productRepository.existsByCategoryId(id)) {
       throw new InvalidOperationException("Cannot delete category: it has associated products");
     }
-    categoryRepository.deleteById(id);
+    categoryRepository.delete(category);
   }
 }

@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.lautarorisso.eCommerce_api.enums.Role;
 import com.lautarorisso.eCommerce_api.model.CartEntity;
@@ -32,6 +33,7 @@ public class DataSeeder implements CommandLineRunner {
   @Value("${admin.password}")
   private String adminPassword;
 
+  @Transactional
   @Override
   public void run(String... args) {
     seedAdmin();
@@ -54,8 +56,8 @@ public class DataSeeder implements CommandLineRunner {
     List<String> defaultCategories = List.of(
         "Electronics", "Clothing", "Books", "Home & Garden",
         "Sports", "Food & Drinks", "Toys", "Health & Beauty");
-    defaultCategories.stream()
+    categoryRepository.saveAll(defaultCategories.stream()
         .map(CategoryEntity::new)
-        .forEach(categoryRepository::save);
+        .toList());
   }
 }

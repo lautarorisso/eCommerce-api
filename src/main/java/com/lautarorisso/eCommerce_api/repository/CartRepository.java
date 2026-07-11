@@ -15,7 +15,5 @@ public interface CartRepository extends JpaRepository<CartEntity, Long> {
   @Query("SELECT c FROM CartEntity c LEFT JOIN FETCH c.items i LEFT JOIN FETCH i.product WHERE c.user.id = :userId")
   Optional<CartEntity> findByUserId(@Param("userId") Long userId);
 
-  boolean existsByUserId(Long userId);
-
   List<CartEntity> findByStatusAndLastActivityBefore(CartStatus status, LocalDateTime dateTime);
 }

@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,7 +53,7 @@ class UserServiceTest {
   @Test
   @DisplayName("createUser - should create and return UserDto")
   void createUser_withValidData_returnsDto() {
-    var request = new CreateUserRequest("johndoe", "user@example.com", "password123");
+    var request = new CreateUserRequest("johndoe", "user@example.com", "password123", Role.USER);
 
     when(userRepository.existsByEmail("user@example.com")).thenReturn(false);
     when(passwordEncoder.encode("password123")).thenReturn("encoded");
@@ -70,8 +72,8 @@ class UserServiceTest {
   @Test
   @DisplayName("deleteUser - should delete when user exists and has no references")
   void deleteUser_whenValid_deletesSuccessfully() {
-    when(userRepository.existsById(1L)).thenReturn(true);
-    when(cartRepository.findByUserId(1L)).thenReturn(java.util.Optional.empty());
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    when(cartRepository.findByUserId(1L)).thenReturn(Optional.empty());
     when(orderRepository.existsByUserId(1L)).thenReturn(false);
 
     userService.deleteUser(1L);
@@ -82,8 +84,8 @@ class UserServiceTest {
   @Test
   @DisplayName("deleteUser - should throw InvalidOperationException when user has active cart")
   void deleteUser_whenHasCart_throwsException() {
-    when(userRepository.existsById(1L)).thenReturn(true);
-    when(cartRepository.findByUserId(1L)).thenReturn(java.util.Optional.of(new CartEntity(user)));
+    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+    when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(new CartEntity(user)));
 
     assertThrows(InvalidOperationException.class, () -> userService.deleteUser(1L));
     verify(userRepository, never()).deleteById(any());

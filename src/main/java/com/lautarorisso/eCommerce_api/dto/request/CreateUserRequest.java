@@ -1,5 +1,7 @@
 package com.lautarorisso.eCommerce_api.dto.request;
 
+import com.lautarorisso.eCommerce_api.enums.Role;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -14,5 +16,11 @@ public record CreateUserRequest(
     @NotBlank @Email @Size(max = 100) String email,
 
     @Schema(description = "Password", example = "securePassword123")
-    @NotBlank @Size(min = 6, max = 100) String password) {
+    @NotBlank @Size(min = 6, max = 100) String password,
+
+    @Schema(description = "User role", example = "USER")
+    Role role) {
+  public CreateUserRequest {
+    if (role == null) role = Role.USER;
+  }
 }

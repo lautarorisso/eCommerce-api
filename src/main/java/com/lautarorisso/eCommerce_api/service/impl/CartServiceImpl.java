@@ -17,12 +17,10 @@ import com.lautarorisso.eCommerce_api.mapper.CartMapper;
 import com.lautarorisso.eCommerce_api.model.CartEntity;
 import com.lautarorisso.eCommerce_api.model.CartItemEntity;
 import com.lautarorisso.eCommerce_api.model.ProductEntity;
-import com.lautarorisso.eCommerce_api.model.UserEntity;
 import com.lautarorisso.eCommerce_api.service.CartService;
 
 import com.lautarorisso.eCommerce_api.repository.ProductRepository;
 import com.lautarorisso.eCommerce_api.repository.CartRepository;
-import com.lautarorisso.eCommerce_api.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -32,7 +30,6 @@ public class CartServiceImpl implements CartService {
 
   private final CartRepository cartRepository;
   private final ProductRepository productRepository;
-  private final UserRepository userRepository;
   private final CartMapper cartMapper;
   private final SecurityUtils securityUtils;
 
@@ -113,88 +110,6 @@ public class CartServiceImpl implements CartService {
     existingItem.changeQuantity(quantity);
     cartRepository.save(cart);
     return cartMapper.toDto(cart);
-  }
-
-  protected CartEntity getOrCreateCartForCurrentUser() {
-    Long userId = securityUtils.getCurrentUserId();
-    return cartRepository.findByUserId(userId)
-        .orElseGet(() -> {
-          UserEntity user = userRepository.findById(userId)
-              .orElseThrow(() -> new ResourceNotFoundException("User", userId));
-          return cartRepository.save(new CartEntity(user));
-        });
-  }
-
-  @Transactional(readOnly = true)
-  @Override
-  public CartDto getMyCart() {
-    CartEntity cart = getOrCreateCartForCurrentUser();
-    return cartMapper.toDto(cart);
-  }
-
-  @Transactional
-  @Override
-  public CartDto addProductToMyCart(Long productId, int quantity) {
-    CartEntity cart = getOrCreateCartForCurrentUser();
-    if (!cart.isActive()) {
-      throw new InvalidOperationException("Cart is not active");
-    }
-    ProductEntity product = productRepository.findById(productId)
-        .orElseThrow(() -> new ResourceNotFoundException("Product", productId));
-    Optional<CartItemEntity> existingItem = cart.getItems().stream()
-        .filter(item -> item.getProduct().getId().equals(productId)).findFirst();
-    int totalQty = existingItem.map(CartItemEntity::getQuantity).orElse(0) + quantity;
-    if (totalQty > product.getStock()) {
-      throw new InsufficientResourcesException(product.getName(), totalQty, product.getStock());
-    }
-    if (existingItem.isPresent()) {
-      existingItem.get().changeQuantity(totalQty);
-    } else {
-      cart.addItem(new CartItemEntity(cart, product, quantity, product.getUnitPrice()));
-    }
-    cartRepository.save(cart);
-    return cartMapper.toDto(cart);
-  }
-
-  @Transactional
-  @Override
-  public CartDto removeProductFromMyCart(Long productId) {
-    CartEntity cart = getOrCreateCartForCurrentUser();
-    if (!cart.isActive()) {
-      throw new InvalidOperationException("Cart is not active");
-    }
-    CartItemEntity existingItem = cart.getItems().stream()
-        .filter(item -> item.getProduct().getId().equals(productId)).findFirst()
-        .orElseThrow(() -> new ResourceNotFoundException("CartItem", "productId", productId.toString()));
-    cart.removeItem(existingItem);
-    cartRepository.save(cart);
-    return cartMapper.toDto(cart);
-  }
-
-  @Transactional
-  @Override
-  public CartDto updateQuantityInMyCart(Long productId, int quantity) {
-    CartEntity cart = getOrCreateCartForCurrentUser();
-    if (!cart.isActive()) {
-      throw new InvalidOperationException("Cart is not active");
-    }
-    CartItemEntity existingItem = cart.getItems().stream()
-        .filter(item -> item.getProduct().getId().equals(productId)).findFirst()
-        .orElseThrow(() -> new ResourceNotFoundException("CartItem", "productId", productId.toString()));
-    existingItem.changeQuantity(quantity);
-    cartRepository.save(cart);
-    return cartMapper.toDto(cart);
-  }
-
-  @Transactional
-  @Override
-  public void clearMyCart() {
-    CartEntity cart = getOrCreateCartForCurrentUser();
-    if (!cart.isActive()) {
-      throw new InvalidOperationException("Cart is not active");
-    }
-    cart.clear();
-    cartRepository.save(cart);
   }
 
   @Transactional

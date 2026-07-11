@@ -45,15 +45,6 @@ public class JwtService {
         .compact();
   }
 
-  public boolean isValid(String token) {
-    try {
-      getClaims(token);
-      return true;
-    } catch (JwtException e) {
-      return false;
-    }
-  }
-
   public Claims getClaims(String token) {
     return Jwts.parser()
         .verifyWith(key)
