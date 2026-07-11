@@ -139,6 +139,22 @@ class CartServiceTest {
   }
 
   @Test
+  @DisplayName("updateQuantity - should throw InsufficientResourcesException when stock is insufficient")
+  void updateQuantity_withInsufficientStock_throwsException() {
+    var lowStockProduct = new ProductEntity("Mouse", "Wireless mouse", BigDecimal.valueOf(29.99), 5);
+    ReflectionTestUtils.setField(lowStockProduct, "id", 1L);
+    var cart = new CartEntity(user);
+    var item = new CartItemEntity(cart, lowStockProduct, 3, lowStockProduct.getUnitPrice());
+    cart.addItem(item);
+
+    when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
+    doNothing().when(securityUtils).assertOwnerOrAdmin(anyLong());
+
+    assertThrows(InsufficientResourcesException.class, () -> cartService.updateQuantity(1L, 1L, 10));
+    verify(cartRepository, never()).save(any());
+  }
+
+  @Test
   @DisplayName("clearCart - should clear all items from cart")
   void clearCart_withValidData_clearsItems() {
     var cart = new CartEntity(user);

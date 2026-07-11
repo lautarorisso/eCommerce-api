@@ -84,6 +84,9 @@ public class CartServiceImpl implements CartService {
     CartItemEntity existingItem = cart.getItems().stream()
         .filter(item -> item.getProduct().getId().equals(productId)).findFirst()
         .orElseThrow(() -> new ResourceNotFoundException("CartItem", "productId", productId.toString()));
+    if (quantity > existingItem.getProduct().getStock()) {
+      throw new InsufficientResourcesException(existingItem.getProduct().getName());
+    }
     existingItem.changeQuantity(quantity);
     cartRepository.save(cart);
     return cartMapper.toDto(cart);

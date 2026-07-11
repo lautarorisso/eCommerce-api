@@ -198,6 +198,16 @@ src/main/java/com/lautarorisso/eCommerce_api/
 └── specification/    # JPA Specifications for dynamic queries
 ```
 
+## Known Limitations
+
+These are intentional design decisions that simplify the system at the expense of production-level robustness:
+
+- **No stock reservation between cart and payment** — Stock is validated when adding items to the cart and when creating an order, but it is only actually deducted when the order is paid (`payOrder`). Between order creation and payment, other users could purchase the same stock. This approach simplifies inventory management: since stock is never deducted on order creation, cancelling a PENDING order doesn't require restoring stock. The trade-off is that stock availability at checkout time is best-effort, not guaranteed.
+
+- **Cancel only available for PENDING orders** — Orders can only be cancelled while in PENDING status, before payment and stock deduction. Once paid, the order must follow the full lifecycle (shipped → delivered). This is a direct consequence of the stock deduction model above.
+
+- **Hard deletes** — Users, products, and categories are physically deleted from the database rather than soft-deleted. This is appropriate for a portfolio project where historical data retention is not a requirement.
+
 ## License
 
 This project is for educational purposes.
