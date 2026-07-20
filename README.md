@@ -37,7 +37,18 @@ REST API for an e-commerce system with shopping cart, order management, and JWT 
 docker compose up --build
 ```
 
+The `docker-compose.yml` comes with sensible defaults for all required environment variables (DB credentials, JWT secret, admin password), so no additional configuration is needed to get started.
+
 The app will be available at `http://localhost:8080`. Swagger UI at `http://localhost:8080/swagger-ui.html`.
+
+To stop and remove containers:
+```bash
+docker compose down
+```
+Add `-v` to also remove the database volume:
+```bash
+docker compose down -v
+```
 
 ### Local
 
@@ -165,15 +176,14 @@ PENDING ──► PAID ──► SHIPPED ──► DELIVERED
 mvn test
 ```
 
-62 tests across 4 tiers:
+63 tests across 4 tiers:
 
 | Tier | Scope | Tests |
 |------|-------|-------|
 | Security | JwtService, SecurityUtils, JwtFilter, RateLimiter | 19 |
-| Services | Error paths and business logic | 25 |
-| Controllers | WebMvc layer with mock security | 12 |
+| Services | Error paths and business logic | 29 |
+| Controllers | WebMvc layer with mock security | 14 |
 | Integration | Full flow: register → login → cart → order | 1 |
-| Controllers (additional) | Product, Cart, Auth, Order | 5 |
 
 Tests use an H2 in-memory database with the `test` profile.
 
