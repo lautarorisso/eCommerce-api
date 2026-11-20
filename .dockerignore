@@ -1,4 +1,10 @@
+# Control de versiones
 .git
+.gitignore
+.gitattributes
+.github
+
+# Build / IDE
 target/
 .idea
 *.iml
@@ -6,6 +12,16 @@ target/
 .mvn
 mvnw
 mvnw.cmd
-docker-compose.yml
+HELP.md
+
+# Secretos y config local (nunca deben entrar a la imagen)
+.env
+.env.*
+!.env.example
+docker-compose*.yml
 Dockerfile
 .dockerignore
+
+# Otros
+*.log
+README.md

@@ -33,13 +33,23 @@ REST API for an e-commerce system with shopping cart, order management, and JWT 
 
 ### Docker (recommended)
 
+1. Create your `.env` from the template and set the required values (`DB_PASSWORD`, `JWT_SECRET`, `ADMIN_PASSWORD`):
+```bash
+cp .env.example .env
+# Generate a strong JWT secret:
+openssl rand -base64 48
+```
+
+2. Build and start:
 ```bash
 docker compose up --build
 ```
 
-The `docker-compose.yml` comes with sensible defaults for all required environment variables (DB credentials, JWT secret, admin password), so no additional configuration is needed to get started.
+All Docker configuration (ports, image tag, Java version, DB credentials, JVM options, etc.) is driven by environment variables from `.env`; see [Environment Variables](#environment-variables). `docker compose` fails fast with a clear message if a required variable is missing. `.env` is git-ignored and excluded from the image.
 
-The app will be available at `http://localhost:8080`. Swagger UI at `http://localhost:8080/swagger-ui.html`.
+The image uses a multi-stage build, runs as a non-root user and exposes a health check on `/actuator/health`.
+
+The app will be available at `http://localhost:${APP_PORT}` (default `8080`). Swagger UI at `/swagger-ui.html`.
 
 To stop and remove containers:
 ```bash
@@ -79,6 +89,22 @@ CREATE DATABASE ecommerce;
 | `JWT_EXPIRATION_HOURS` | No | `24` | Token lifetime in hours |
 | `ADMIN_EMAIL` | No | `admin@email.com` | Seed admin email |
 | `ADMIN_PASSWORD` | **Yes** | — | Seed admin password |
+
+### Docker / Compose-only variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `COMPOSE_PROJECT_NAME` | No | `ecommerce-api` | Compose project and container name prefix |
+| `APP_IMAGE` / `APP_TAG` | No | `ecommerce-api` / `latest` | Built image name and tag |
+| `JAVA_VERSION` | No | `21` | Java version used for build and runtime images |
+| `POSTGRES_VERSION` | No | `16` | PostgreSQL major version |
+| `SERVER_PORT` | No | `8080` | Port the app listens on inside the container |
+| `APP_PORT` | No | `8080` | Host port published for the app |
+| `JAVA_OPTS` | No | `-XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError` | JVM options |
+| `DB_NAME` | No | `ecommerce` | Database name created by the Postgres container |
+| `DB_PORT` / `DB_BIND_ADDRESS` | No | `5432` / `127.0.0.1` | Host port / interface where Postgres is published |
+
+In Docker, `DB_URL` is built automatically from `DB_NAME` and points to the `postgres` service.
 
 On first startup, an admin user and 8 default categories are automatically created via `DataSeeder`.
 
