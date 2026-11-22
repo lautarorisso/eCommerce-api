@@ -30,10 +30,6 @@ jobs:
       - uses: docker/setup-buildx-action@v3
 
       - name: Validate compose file
-        env:
-          DB_PASSWORD: ci-password
-          JWT_SECRET: ci-secret-key-that-is-at-least-32-chars-long
-          ADMIN_PASSWORD: ci-admin-password
         run: docker compose config -q
 
       - name: Build image

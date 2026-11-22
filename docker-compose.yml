@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER:-user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD es obligatoria (ver .env.example)}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
       POSTGRES_DB: ${DB_NAME:-ecommerce}
     ports:
       # Solo expuesto en localhost por defecto (para herramientas de desarrollo)
@@ -40,15 +40,15 @@ services:
       # Base de datos (el host es el nombre del servicio dentro de la red de compose)
       DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-ecommerce}
       DB_USER: ${DB_USER:-user}
-      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD es obligatoria (ver .env.example)}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
       DDL_AUTO: ${DDL_AUTO:-update}
       SHOW_SQL: ${SHOW_SQL:-false}
       # Seguridad
-      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET es obligatoria, mínimo 32 caracteres (ver .env.example)}
+      JWT_SECRET: ${JWT_SECRET:-my-secret-key-for-jwt-token-signing-32-chars}
       JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS:-24}
       # Usuario admin inicial
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@email.com}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD es obligatoria (ver .env.example)}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
     depends_on:
       postgres:
         condition: service_healthy
