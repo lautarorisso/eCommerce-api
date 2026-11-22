@@ -1,17 +1,15 @@
-name: ${COMPOSE_PROJECT_NAME:-ecommerce-api}
+name: ecommerce-api
 
 services:
   postgres:
-    image: postgres:${POSTGRES_VERSION:-16}-alpine
-    container_name: ${COMPOSE_PROJECT_NAME:-ecommerce-api}-postgres
+    image: postgres:16-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER:-user}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
-      POSTGRES_DB: ${DB_NAME:-ecommerce}
+      POSTGRES_DB: ecommerce
     ports:
-      # Solo expuesto en localhost por defecto (para herramientas de desarrollo)
-      - "${DB_BIND_ADDRESS:-127.0.0.1}:${DB_PORT:-5432}:5432"
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -24,40 +22,23 @@ services:
       - backend
 
   app:
-    build:
-      context: .
-      args:
-        JAVA_VERSION: ${JAVA_VERSION:-21}
-        SERVER_PORT: ${SERVER_PORT:-8080}
-    image: ${APP_IMAGE:-ecommerce-api}:${APP_TAG:-latest}
-    container_name: ${COMPOSE_PROJECT_NAME:-ecommerce-api}-app
+    build: .
     restart: unless-stopped
     ports:
-      - "${APP_PORT:-8080}:${SERVER_PORT:-8080}"
+      - "${APP_PORT:-8080}:8080"
     environment:
-      SERVER_PORT: ${SERVER_PORT:-8080}
-      JAVA_OPTS: ${JAVA_OPTS:--XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError}
-      # Base de datos (el host es el nombre del servicio dentro de la red de compose)
-      DB_URL: jdbc:postgresql://postgres:5432/${DB_NAME:-ecommerce}
+      DB_URL: jdbc:postgresql://postgres:5432/ecommerce
       DB_USER: ${DB_USER:-user}
       DB_PASSWORD: ${DB_PASSWORD:-secret}
       DDL_AUTO: ${DDL_AUTO:-update}
       SHOW_SQL: ${SHOW_SQL:-false}
-      # Seguridad
       JWT_SECRET: ${JWT_SECRET:-my-secret-key-for-jwt-token-signing-32-chars}
       JWT_EXPIRATION_HOURS: ${JWT_EXPIRATION_HOURS:-24}
-      # Usuario admin inicial
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@email.com}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
     depends_on:
       postgres:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:$${SERVER_PORT}/actuator/health > /dev/null || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 40s
     networks:
       - backend
 

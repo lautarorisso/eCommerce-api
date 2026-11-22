@@ -70,40 +70,18 @@ docker compose down -v
 
 All variables are optional and have defaults. They are defined in `.env.example` and consumed by `docker-compose.yml`.
 
-### Application
-
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `SERVER_PORT` | `8080` | Port the app listens on inside the container |
-| `APP_PORT` | `8080` | Host port published for the app |
-| `JAVA_OPTS` | `-XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError` | JVM options |
+| `APP_PORT` | `8080` | Host port where the API is published |
+| `DB_PORT` | `5432` | Host port where Postgres is published (localhost only) |
+| `DB_USER` | `user` | Database username |
+| `DB_PASSWORD` | `secret` | Database password |
 | `JWT_SECRET` | `my-secret-key-for-jwt-token-signing-32-chars` | Secret key for JWT signing (min 32 chars) |
 | `JWT_EXPIRATION_HOURS` | `24` | Token lifetime in hours |
 | `ADMIN_EMAIL` | `admin@email.com` | Seed admin email |
 | `ADMIN_PASSWORD` | `admin123` | Seed admin password |
-| `DDL_AUTO` | `update` | Hibernate DDL strategy |
+| `DDL_AUTO` | `update` | Hibernate DDL strategy (`update`, `validate`, `none`) |
 | `SHOW_SQL` | `false` | Log SQL statements |
-
-### Database
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `DB_NAME` | `ecommerce` | Database name |
-| `DB_USER` | `user` | Database username |
-| `DB_PASSWORD` | `secret` | Database password |
-| `DB_PORT` | `5432` | Host port where Postgres is published |
-| `DB_BIND_ADDRESS` | `127.0.0.1` | Host interface where Postgres is published |
-
-`DB_URL` is built automatically from `DB_NAME` and points to the `postgres` service.
-
-### Docker
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `COMPOSE_PROJECT_NAME` | `ecommerce-api` | Compose project and container name prefix |
-| `APP_IMAGE` / `APP_TAG` | `ecommerce-api` / `latest` | Built image name and tag |
-| `JAVA_VERSION` | `21` | Java version for build and runtime images |
-| `POSTGRES_VERSION` | `16` | PostgreSQL major version |
 
 On first startup, an admin user and 8 default categories are automatically created via `DataSeeder`.
 
