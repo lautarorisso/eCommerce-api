@@ -31,25 +31,31 @@ REST API for an e-commerce system with shopping cart, order management, and JWT 
 
 ## Getting Started
 
-### Docker (recommended)
+**Prerequisites:** Docker with Docker Compose.
 
-1. Create your `.env` from the template and set the required values (`DB_PASSWORD`, `JWT_SECRET`, `ADMIN_PASSWORD`):
-```bash
-cp .env.example .env
-# Generate a strong JWT secret:
-openssl rand -base64 48
-```
-
-2. Build and start:
 ```bash
 docker compose up --build
 ```
 
-All Docker configuration (ports, image tag, Java version, DB credentials, JVM options, etc.) is driven by environment variables from `.env`; see [Environment Variables](#environment-variables). `docker compose` fails fast with a clear message if a required variable is missing. `.env` is git-ignored and excluded from the image.
+That's it. Every setting has a default value, so no extra configuration is needed. The app will be available at `http://localhost:8080` and Swagger UI at `http://localhost:8080/swagger-ui.html`.
 
-The image uses a multi-stage build, runs as a non-root user and exposes a health check on `/actuator/health`.
+Default admin credentials: `admin@email.com` / `admin123`.
 
-The app will be available at `http://localhost:${APP_PORT}` (default `8080`). Swagger UI at `/swagger-ui.html`.
+> The defaults are meant for local development. Change the secrets before deploying anywhere else.
+
+### Custom configuration
+
+To use your own values, edit `.env.example` and copy it to `.env` (Docker Compose reads it automatically):
+
+```bash
+# 1. Edit the values you want to change in .env.example
+# 2. Copy it:
+cp .env.example .env
+# 3. Start again:
+docker compose up --build
+```
+
+Tip: generate a strong JWT secret with `openssl rand -base64 48`. `.env` is git-ignored and excluded from the Docker image.
 
 To stop and remove containers:
 ```bash
@@ -60,51 +66,22 @@ Add `-v` to also remove the database volume:
 docker compose down -v
 ```
 
-### Local
-
-**Prerequisites:** Java 21, PostgreSQL running on port 5432
-
-1. Create the database:
-```sql
-CREATE DATABASE ecommerce;
-```
-
-2. Set environment variables (see [Environment Variables](#environment-variables))
-
-3. Run:
-```bash
-./mvnw spring-boot:run
-```
-
 ## Environment Variables
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `DB_URL` | No | `jdbc:postgresql://localhost:5432/ecommerce` | Database connection URL |
-| `DB_USER` | No | `user` | Database username |
-| `DB_PASSWORD` | **Yes** | — | Database password |
-| `DDL_AUTO` | No | `update` | Hibernate DDL strategy |
-| `SHOW_SQL` | No | `false` | Log SQL statements |
-| `JWT_SECRET` | **Yes** | — | Secret key for JWT signing (min 32 chars) |
-| `JWT_EXPIRATION_HOURS` | No | `24` | Token lifetime in hours |
-| `ADMIN_EMAIL` | No | `admin@email.com` | Seed admin email |
-| `ADMIN_PASSWORD` | **Yes** | — | Seed admin password |
+All variables are optional and have defaults. They are defined in `.env.example` and consumed by `docker-compose.yml`.
 
-### Docker / Compose-only variables
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `COMPOSE_PROJECT_NAME` | No | `ecommerce-api` | Compose project and container name prefix |
-| `APP_IMAGE` / `APP_TAG` | No | `ecommerce-api` / `latest` | Built image name and tag |
-| `JAVA_VERSION` | No | `21` | Java version used for build and runtime images |
-| `POSTGRES_VERSION` | No | `16` | PostgreSQL major version |
-| `SERVER_PORT` | No | `8080` | Port the app listens on inside the container |
-| `APP_PORT` | No | `8080` | Host port published for the app |
-| `JAVA_OPTS` | No | `-XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError` | JVM options |
-| `DB_NAME` | No | `ecommerce` | Database name created by the Postgres container |
-| `DB_PORT` / `DB_BIND_ADDRESS` | No | `5432` / `127.0.0.1` | Host port / interface where Postgres is published |
-
-In Docker, `DB_URL` is built automatically from `DB_NAME` and points to the `postgres` service.
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `APP_PORT` | `8080` | Host port where the API is published |
+| `DB_PORT` | `5432` | Host port where Postgres is published (localhost only) |
+| `DB_USER` | `user` | Database username |
+| `DB_PASSWORD` | `secret` | Database password |
+| `JWT_SECRET` | `my-secret-key-for-jwt-token-signing-32-chars` | Secret key for JWT signing (min 32 chars) |
+| `JWT_EXPIRATION_HOURS` | `24` | Token lifetime in hours |
+| `ADMIN_EMAIL` | `admin@email.com` | Seed admin email |
+| `ADMIN_PASSWORD` | `admin123` | Seed admin password |
+| `DDL_AUTO` | `update` | Hibernate DDL strategy (`update`, `validate`, `none`) |
+| `SHOW_SQL` | `false` | Log SQL statements |
 
 On first startup, an admin user and 8 default categories are automatically created via `DataSeeder`.
 
