@@ -155,6 +155,35 @@ class CartServiceTest {
   }
 
   @Test
+  @DisplayName("recoverCart - should reactivate an abandoned cart")
+  void recoverCart_whenAbandoned_setsActive() {
+    var cart = new CartEntity(user);
+    cart.abandon();
+
+    when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
+    doNothing().when(securityUtils).assertOwnerOrAdmin(anyLong());
+    when(cartMapper.toDto(cart)).thenReturn(cartDto);
+
+    var result = cartService.recoverCart(1L);
+
+    assertNotNull(result);
+    assertEquals(CartStatus.ACTIVE, cart.getStatus());
+    verify(cartRepository).save(cart);
+  }
+
+  @Test
+  @DisplayName("recoverCart - should reject recovering an already active cart")
+  void recoverCart_whenActive_throwsException() {
+    var cart = new CartEntity(user);
+
+    when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
+    doNothing().when(securityUtils).assertOwnerOrAdmin(anyLong());
+
+    assertThrows(InvalidOperationException.class, () -> cartService.recoverCart(1L));
+    verify(cartRepository, never()).save(any());
+  }
+
+  @Test
   @DisplayName("clearCart - should clear all items from cart")
   void clearCart_withValidData_clearsItems() {
     var cart = new CartEntity(user);

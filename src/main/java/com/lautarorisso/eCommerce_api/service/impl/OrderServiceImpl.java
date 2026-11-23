@@ -1,6 +1,7 @@
 package com.lautarorisso.eCommerce_api.service.impl;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -51,17 +52,30 @@ public class OrderServiceImpl implements OrderService {
       throw new InvalidOperationException("Cart is empty");
     }
     OrderEntity order = new OrderEntity(cart.getUser());
+    List<ProductEntity> orderedProducts = new ArrayList<>();
     for (CartItemEntity cartItem : cart.getItems()) {
       ProductEntity product = cartItem.getProduct();
+      // Validate price hasn't changed since item was added to cart
+      if (cartItem.getUnitPrice().compareTo(product.getUnitPrice()) != 0) {
+        throw new InvalidOperationException(
+            "Price for product '" + product.getName() + "' has changed. Please update your cart.");
+      }
       if (product.getStock() < cartItem.getQuantity()) {
+        throw new InsufficientResourcesException(product.getName());
+      }
+      try {
+        product.decreaseStock(cartItem.getQuantity());
+      } catch (IllegalArgumentException e) {
         throw new InsufficientResourcesException(product.getName());
       }
       OrderItemEntity orderItem = new OrderItemEntity(order, cartItem.getProduct(), cartItem.getQuantity(),
           cartItem.getUnitPrice());
       order.addItem(orderItem);
+      orderedProducts.add(product);
     }
     cart.clear();
     orderRepository.save(order);
+    productRepository.saveAll(orderedProducts);
     return orderMapper.toDto(order);
   }
 
@@ -93,6 +107,21 @@ public class OrderServiceImpl implements OrderService {
         .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
     securityUtils.assertOwnerOrAdmin(order.getUser().getId());
     order.cancel();
+    // Restore stock since it was decremented at order creation
+    List<OrderItemEntity> items = order.getItems();
+    if (items != null && !items.isEmpty()) {
+      List<ProductEntity> productsToRestore = new ArrayList<>();
+      for (OrderItemEntity item : items) {
+        ProductEntity product = item.getProduct();
+        try {
+          product.increaseStock(item.getQuantity());
+        } catch (IllegalArgumentException e) {
+          // Ignore if product no longer exists
+        }
+        productsToRestore.add(product);
+      }
+      productRepository.saveAll(productsToRestore);
+    }
     orderRepository.save(order);
   }
 
@@ -102,28 +131,18 @@ public class OrderServiceImpl implements OrderService {
     OrderEntity order = orderRepository.findById(orderId)
         .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
     securityUtils.assertOwnerOrAdmin(order.getUser().getId());
-    List<ProductEntity> products = order.getItems().stream()
-        .map(item -> {
-          try {
-            item.getProduct().decreaseStock(item.getQuantity());
-          } catch (IllegalArgumentException e) {
-            throw new InsufficientResourcesException(item.getProduct().getName());
-          }
-          return item.getProduct();
-        })
-        .toList();
+    // Stock was already decremented at order creation; no need to decrement again
     order.markAsPaid();
-    productRepository.saveAll(products);
     orderRepository.save(order);
   }
 
   @Transactional
   @Override
-  public void shipOrder(Long orderId) {
+  public void shipOrder(Long orderId, String shippingAddress, String trackingNumber) {
     OrderEntity order = orderRepository.findById(orderId)
         .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
     securityUtils.assertAdmin();
-    order.markAsShipped();
+    order.markAsShipped(shippingAddress, trackingNumber);
     orderRepository.save(order);
   }
 

@@ -82,6 +82,14 @@ All variables are optional and have defaults. They are defined in `.env.example`
 | `ADMIN_PASSWORD` | `admin123` | Seed admin password |
 | `DDL_AUTO` | `update` | Hibernate DDL strategy (`update`, `validate`, `none`) |
 | `SHOW_SQL` | `false` | Log SQL statements |
+| `RATE_LIMIT_LOGIN_MAX_ATTEMPTS` | `5` | Max login attempts per IP per window |
+| `RATE_LIMIT_LOGIN_WINDOW_SECONDS` | `60` | Login rate limit window in seconds |
+| `RATE_LIMIT_REGISTER_MAX_ATTEMPTS` | `5` | Max register attempts per IP per window |
+| `RATE_LIMIT_REGISTER_WINDOW_SECONDS` | `60` | Register rate limit window in seconds |
+| `RATE_LIMIT_ORDER_MAX_ATTEMPTS` | `10` | Max order creation attempts per IP per window |
+| `RATE_LIMIT_ORDER_WINDOW_SECONDS` | `60` | Order rate limit window in seconds |
+| `RATE_LIMIT_RESTOCK_MAX_ATTEMPTS` | `10` | Max restock attempts per IP per window |
+| `RATE_LIMIT_RESTOCK_WINDOW_SECONDS` | `60` | Restock rate limit window in seconds |
 
 On first startup, an admin user and 8 default categories are automatically created via `DataSeeder`.
 
@@ -150,6 +158,7 @@ Authorization: Bearer <token>
 | `PATCH` | `/api/carts/{cartId}/items/{productId}` | Update item quantity | Authenticated |
 | `DELETE` | `/api/carts/{cartId}/items/{productId}` | Remove item from cart | Authenticated |
 | `DELETE` | `/api/carts/{cartId}` | Clear cart | Authenticated |
+| `PATCH` | `/api/carts/{cartId}/recover` | Reactivate an ABANDONED cart | Authenticated |
 
 ### Orders
 
@@ -160,10 +169,10 @@ Authorization: Bearer <token>
 | `GET` | `/api/orders/{orderId}` | Get order by ID | Authenticated |
 | `PATCH` | `/api/orders/{orderId}/cancel` | Cancel order (PENDING only) | Authenticated |
 | `PATCH` | `/api/orders/{orderId}/pay` | Pay order (PENDING only) | Authenticated |
-| `PATCH` | `/api/orders/{orderId}/ship` | Ship order (PAID only) | Authenticated |
+| `PATCH` | `/api/orders/{orderId}/ship?shippingAddress=...&trackingNumber=...` | Ship order (PAID only; requires both params) | Authenticated |
 | `PATCH` | `/api/orders/{orderId}/deliver` | Deliver order (SHIPPED only) | Authenticated |
 
-**Order status flow:**
+**Order status flow** (paying records `paidAt`; shipping requires `shippingAddress` and `trackingNumber` and records `shippedAt`):
 
 ```
 PENDING ──► PAID ──► SHIPPED ──► DELIVERED
@@ -179,13 +188,15 @@ PENDING ──► PAID ──► SHIPPED ──► DELIVERED
 mvn test
 ```
 
-63 tests across 4 tiers:
+90 tests across 6 areas:
 
-| Tier | Scope | Tests |
+| Area | Scope | Tests |
 |------|-------|-------|
-| Security | JwtService, SecurityUtils, JwtFilter, RateLimiter | 19 |
-| Services | Error paths and business logic | 29 |
+| Security | JwtService, SecurityUtils, JwtFilter, RateLimitInterceptor | 23 |
+| Services | Stock lifecycle, order state machine, cart recovery, error paths | 41 |
 | Controllers | WebMvc layer with mock security | 14 |
+| Model | Entity invariants (stock, soft delete) | 10 |
+| Exceptions | HTTP status mapping (IllegalStateException → 409) | 1 |
 | Integration | Full flow: register → login → cart → order | 1 |
 
 Tests use an H2 in-memory database with the `test` profile.

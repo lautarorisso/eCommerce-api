@@ -101,6 +101,18 @@ public class ProductController {
     productService.deleteProduct(productId);
   }
 
+  @PatchMapping("/{productId}/restore")
+  @Operation(summary = "Restore a soft-deleted product", description = "Restores a soft-deleted product by ID (admin only)")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Product restored"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "404", description = "Product not found"),
+      @ApiResponse(responseCode = "409", description = "Active product with same name already exists")
+  })
+  public ProductDto restoreProduct(@PathVariable Long productId) {
+    return productService.restoreProduct(productId);
+  }
+
   @PatchMapping("/{productId}/restock")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @Operation(summary = "Restock a product", description = "Adds stock quantity to a product (admin only)")

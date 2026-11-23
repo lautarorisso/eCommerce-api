@@ -1,5 +1,6 @@
 package com.lautarorisso.eCommerce_api.model;
 
+import java.time.LocalDateTime;
 import java.util.regex.Pattern;
 
 import com.lautarorisso.eCommerce_api.enums.Role;
@@ -12,14 +13,18 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import org.hibernate.annotations.SQLRestriction;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "users")
+@SQLRestriction("deleted_at IS NULL")
 public class UserEntity {
   private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
 
@@ -35,6 +40,10 @@ public class UserEntity {
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private Role role;
+  @Column(name = "deleted_at")
+  private LocalDateTime deletedAt;
+  @Version
+  private Long version;
 
   public UserEntity(String username, String email, String password, Role role) {
     if (username == null || username.isBlank()) {
@@ -60,7 +69,6 @@ public class UserEntity {
   }
 
   public void changeUsername(String newUsername) {
-
     if (newUsername == null || newUsername.isBlank()) {
       throw new IllegalArgumentException("Username cannot be empty");
     }
@@ -69,7 +77,6 @@ public class UserEntity {
   }
 
   public void changeEmail(String newEmail) {
-
     if (newEmail == null || newEmail.isBlank()) {
       throw new IllegalArgumentException("Email cannot be empty");
     }
@@ -79,5 +86,17 @@ public class UserEntity {
     }
 
     this.email = newEmail;
+  }
+
+  public void softDelete() {
+    this.deletedAt = LocalDateTime.now();
+  }
+
+  public void restore() {
+    this.deletedAt = null;
+  }
+
+  public boolean isDeleted() {
+    return this.deletedAt != null;
   }
 }

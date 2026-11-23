@@ -94,4 +94,8 @@ public class CartEntity {
     this.status = CartStatus.ABANDONED;
   }
 
+  public void recover() {
+    this.status = CartStatus.ACTIVE;
+  }
+
 }

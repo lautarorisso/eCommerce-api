@@ -87,8 +87,8 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(IllegalStateException.class)
   public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException ex) {
     log.warn("Illegal state: {}", ex.getMessage());
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-        .body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
+    return ResponseEntity.status(HttpStatus.CONFLICT)
+        .body(new ErrorResponse(HttpStatus.CONFLICT.value(), ex.getMessage()));
   }
 
   @ExceptionHandler(HttpMessageNotReadableException.class)

@@ -20,7 +20,7 @@ public interface OrderService {
 
   void payOrder(Long orderId);
 
-  void shipOrder(Long orderId);
+  void shipOrder(Long orderId, String shippingAddress, String trackingNumber);
 
   void deliverOrder(Long orderId);
 

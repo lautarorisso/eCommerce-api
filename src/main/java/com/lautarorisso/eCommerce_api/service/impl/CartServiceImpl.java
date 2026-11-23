@@ -101,6 +101,18 @@ public class CartServiceImpl implements CartService {
     cartRepository.save(cart);
   }
 
+  @Transactional
+  @Override
+  public CartDto recoverCart(Long cartId) {
+    CartEntity cart = validateCartAccess(cartId);
+    if (cart.isActive()) {
+      throw new InvalidOperationException("Cart is already active");
+    }
+    cart.recover();
+    cartRepository.save(cart);
+    return cartMapper.toDto(cart);
+  }
+
   private CartEntity validateCartAccess(Long cartId) {
     CartEntity cart = cartRepository.findById(cartId)
         .orElseThrow(() -> new ResourceNotFoundException("Cart", cartId));

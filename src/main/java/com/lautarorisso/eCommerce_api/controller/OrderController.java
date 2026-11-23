@@ -96,14 +96,16 @@ public class OrderController {
 
   @PatchMapping("/{orderId}/ship")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @Operation(summary = "Ship an order", description = "Marks an order as SHIPPED (only if it is PAID)")
+  @Operation(summary = "Ship an order", description = "Marks an order as SHIPPED (only if it is PAID and shipping details are provided)")
   @ApiResponses({
       @ApiResponse(responseCode = "204", description = "Order shipped"),
-      @ApiResponse(responseCode = "400", description = "Order cannot be shipped in its current status"),
-      @ApiResponse(responseCode = "404", description = "Order not found")
+      @ApiResponse(responseCode = "400", description = "Shipping address or tracking number is missing"),
+      @ApiResponse(responseCode = "404", description = "Order not found"),
+      @ApiResponse(responseCode = "409", description = "Order cannot be shipped in its current status")
   })
-  public void shipOrder(@PathVariable Long orderId) {
-    orderService.shipOrder(orderId);
+  public void shipOrder(@PathVariable Long orderId, @RequestParam String shippingAddress,
+      @RequestParam String trackingNumber) {
+    orderService.shipOrder(orderId, shippingAddress, trackingNumber);
   }
 
   @PatchMapping("/{orderId}/deliver")

@@ -14,7 +14,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.lautarorisso.eCommerce_api.dto.request.CreateCategoryRequest;
 import com.lautarorisso.eCommerce_api.dto.response.CategoryDto;
+import com.lautarorisso.eCommerce_api.exceptions.DuplicateResourceException;
 import com.lautarorisso.eCommerce_api.exceptions.InvalidOperationException;
+import com.lautarorisso.eCommerce_api.exceptions.ResourceNotFoundException;
 import com.lautarorisso.eCommerce_api.mapper.CategoryMapper;
 import com.lautarorisso.eCommerce_api.model.CategoryEntity;
 import com.lautarorisso.eCommerce_api.repository.CategoryRepository;
@@ -64,7 +66,7 @@ class CategoryServiceTest {
 
     categoryService.deleteCategory(1L);
 
-    verify(categoryRepository).delete(electronics);
+    verify(categoryRepository).save(electronics);
   }
 
   @Test
@@ -75,7 +77,7 @@ class CategoryServiceTest {
 
     assertThrows(InvalidOperationException.class, () -> categoryService.deleteCategory(1L));
 
-    verify(categoryRepository, never()).delete(any());
+    verify(categoryRepository, never()).save(any());
   }
 
   @Test
@@ -88,5 +90,43 @@ class CategoryServiceTest {
 
     assertEquals("Electronics", result.name());
     verify(categoryRepository).findById(1L);
+  }
+
+  @Test
+  @DisplayName("restoreCategory - should restore a soft-deleted category")
+  void restoreCategory_whenDeleted_restoresAndReturnsDto() {
+    var deleted = new CategoryEntity("Books");
+    deleted.softDelete();
+    when(categoryRepository.findDeletedById(1L)).thenReturn(Optional.of(deleted));
+    when(categoryRepository.existsByName("Books")).thenReturn(false);
+    when(categoryRepository.save(deleted)).thenReturn(deleted);
+    when(categoryMapper.toDto(deleted)).thenReturn(new CategoryDto(1L, "Books"));
+
+    var result = categoryService.restoreCategory(1L);
+
+    assertFalse(deleted.isDeleted());
+    assertEquals("Books", result.name());
+    verify(categoryRepository).save(deleted);
+  }
+
+  @Test
+  @DisplayName("restoreCategory - should throw when no soft-deleted category exists")
+  void restoreCategory_whenNotFound_throws() {
+    when(categoryRepository.findDeletedById(1L)).thenReturn(Optional.empty());
+
+    assertThrows(ResourceNotFoundException.class, () -> categoryService.restoreCategory(1L));
+    verify(categoryRepository, never()).save(any());
+  }
+
+  @Test
+  @DisplayName("restoreCategory - should throw when an active category already has the name")
+  void restoreCategory_whenNameTaken_throws() {
+    var deleted = new CategoryEntity("Electronics");
+    deleted.softDelete();
+    when(categoryRepository.findDeletedById(1L)).thenReturn(Optional.of(deleted));
+    when(categoryRepository.existsByName("Electronics")).thenReturn(true);
+
+    assertThrows(DuplicateResourceException.class, () -> categoryService.restoreCategory(1L));
+    verify(categoryRepository, never()).save(any());
   }
 }

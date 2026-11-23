@@ -89,4 +89,16 @@ public class CategoryController {
   public void deleteCategory(@PathVariable Long id) {
     categoryService.deleteCategory(id);
   }
+
+  @PatchMapping("/{id}/restore")
+  @Operation(summary = "Restore a soft-deleted category", description = "Restores a soft-deleted category by ID (admin only)")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Category restored"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "404", description = "Category not found"),
+      @ApiResponse(responseCode = "409", description = "Active category with same name already exists")
+  })
+  public CategoryDto restoreCategory(@PathVariable Long id) {
+    return categoryService.restoreCategory(id);
+  }
 }

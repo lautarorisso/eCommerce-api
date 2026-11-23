@@ -47,6 +47,11 @@ public class OrderEntity {
   private OrderStatus status;
   @Column(nullable = false)
   private LocalDateTime createdAt;
+  @Column(length = 500)
+  private String shippingAddress;
+  private String trackingNumber;
+  private LocalDateTime paidAt;
+  private LocalDateTime shippedAt;
 
   public OrderEntity(UserEntity user) {
     if (user == null) {
@@ -63,19 +68,32 @@ public class OrderEntity {
     if (status != OrderStatus.PENDING) {
       throw new IllegalStateException("Only pending orders can be paid");
     }
+    this.paidAt = LocalDateTime.now();
     this.status = OrderStatus.PAID;
   }
 
-  public void markAsShipped() {
+  public void markAsShipped(String shippingAddress, String trackingNumber) {
     if (status != OrderStatus.PAID) {
       throw new IllegalStateException("Only paid orders can be shipped");
     }
+    if (shippingAddress == null || shippingAddress.isBlank()) {
+      throw new IllegalArgumentException("Shipping address cannot be empty");
+    }
+    if (trackingNumber == null || trackingNumber.isBlank()) {
+      throw new IllegalArgumentException("Tracking number cannot be empty");
+    }
+    this.shippingAddress = shippingAddress;
+    this.trackingNumber = trackingNumber;
+    this.shippedAt = LocalDateTime.now();
     this.status = OrderStatus.SHIPPED;
   }
 
   public void markAsDelivered() {
     if (status != OrderStatus.SHIPPED) {
       throw new IllegalStateException("Only shipped orders can be delivered");
+    }
+    if (this.shippedAt == null) {
+      throw new IllegalStateException("Order has no shipped date");
     }
     this.status = OrderStatus.DELIVERED;
   }

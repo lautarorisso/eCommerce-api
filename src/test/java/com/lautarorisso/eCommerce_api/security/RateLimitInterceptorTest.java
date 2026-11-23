@@ -65,4 +65,63 @@ class RateLimitInterceptorTest {
     verify(filterChain).doFilter(request, response);
     assertEquals(200, response.getStatus());
   }
+
+  @Test
+  @DisplayName("doFilterInternal - should rate limit register endpoint")
+  void doFilterInternal_registerExceedsLimit_returns429() throws ServletException, IOException {
+    request.setRequestURI("/api/auth/register");
+    request.setMethod("POST");
+
+    for (int i = 0; i < 6; i++) {
+      rateLimitInterceptor.doFilterInternal(request, response, filterChain);
+    }
+
+    assertEquals(429, response.getStatus());
+  }
+
+  @Test
+  @DisplayName("doFilterInternal - should rate limit order creation endpoint")
+  void doFilterInternal_ordersExceedsLimit_returns429() throws ServletException, IOException {
+    request.setRequestURI("/api/orders");
+    request.setMethod("POST");
+
+    for (int i = 0; i < 11; i++) {
+      rateLimitInterceptor.doFilterInternal(request, response, filterChain);
+    }
+
+    assertEquals(429, response.getStatus());
+  }
+
+  @Test
+  @DisplayName("doFilterInternal - should rate limit product restock endpoint")
+  void doFilterInternal_restockExceedsLimit_returns429() throws ServletException, IOException {
+    request.setRequestURI("/api/products/7/restock");
+    request.setMethod("PATCH");
+
+    for (int i = 0; i < 11; i++) {
+      rateLimitInterceptor.doFilterInternal(request, response, filterChain);
+    }
+
+    assertEquals(429, response.getStatus());
+  }
+
+  @Test
+  @DisplayName("doFilterInternal - should keep limits independent per endpoint")
+  void doFilterInternal_exhaustedLogin_doesNotBlockRegister() throws ServletException, IOException {
+    request.setRequestURI("/api/auth/login");
+    request.setMethod("POST");
+    for (int i = 0; i < 6; i++) {
+      rateLimitInterceptor.doFilterInternal(request, response, filterChain);
+    }
+    assertEquals(429, response.getStatus());
+
+    var registerRequest = new MockHttpServletRequest();
+    registerRequest.setRequestURI("/api/auth/register");
+    registerRequest.setMethod("POST");
+    var registerResponse = new MockHttpServletResponse();
+
+    rateLimitInterceptor.doFilterInternal(registerRequest, registerResponse, filterChain);
+
+    assertEquals(200, registerResponse.getStatus());
+  }
 }

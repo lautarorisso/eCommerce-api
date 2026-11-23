@@ -100,6 +100,25 @@ class OrderServiceTest {
   }
 
   @Test
+  @DisplayName("createOrder - should throw InvalidOperationException when product price changed after adding to cart")
+  void createOrder_withPriceChangedAfterCart_throwsException() {
+    var product = new ProductEntity("Mouse", "Wireless mouse", BigDecimal.valueOf(29.99), 10);
+    var cart = new CartEntity(user);
+    // Add item with current price (29.99)
+    var item = new CartItemEntity(cart, product, 2, product.getUnitPrice());
+    cart.addItem(item);
+
+    // Simulate admin price change after item was added to cart
+    product.updatePrice(BigDecimal.valueOf(39.99));
+
+    when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
+    doNothing().when(securityUtils).assertOwnerOrAdmin(anyLong());
+
+    assertThrows(InvalidOperationException.class, () -> orderService.createOrder(1L));
+    verify(orderRepository, never()).save(any());
+  }
+
+  @Test
   @DisplayName("createOrder - should throw InsufficientResourcesException when stock is insufficient")
   void createOrder_withInsufficientStock_throwsException() {
     var lowStockProduct = new ProductEntity("Mouse", "Wireless mouse", BigDecimal.valueOf(29.99), 1);
@@ -115,7 +134,7 @@ class OrderServiceTest {
   }
 
   @Test
-  @DisplayName("payOrder - should mark order as paid and decrease stock")
+  @DisplayName("payOrder - should mark order as paid (stock already decreased at order creation)")
   void payOrder_whenPending_marksAsPaid() {
     var order = new OrderEntity(user);
     order.addItem(new com.lautarorisso.eCommerce_api.model.OrderItemEntity(order, product, 2, BigDecimal.valueOf(29.99)));
@@ -126,8 +145,97 @@ class OrderServiceTest {
     orderService.payOrder(1L);
 
     assertEquals(OrderStatus.PAID, order.getStatus());
+    assertNotNull(order.getPaidAt());
     verify(orderRepository).save(order);
-    verify(productRepository).saveAll(any());
+  }
+
+  @Test
+  @DisplayName("shipOrder - should ship a paid order and record shipping details and shippedAt")
+  void shipOrder_whenPaid_setsShippingDetails() {
+    var order = paidOrder();
+
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    doNothing().when(securityUtils).assertAdmin();
+
+    orderService.shipOrder(1L, "Calle Falsa 123", "TRACK-001");
+
+    assertEquals(OrderStatus.SHIPPED, order.getStatus());
+    assertEquals("Calle Falsa 123", order.getShippingAddress());
+    assertEquals("TRACK-001", order.getTrackingNumber());
+    assertNotNull(order.getShippedAt());
+    verify(orderRepository).save(order);
+  }
+
+  @Test
+  @DisplayName("shipOrder - should reject shipping a pending order")
+  void shipOrder_whenPending_throwsException() {
+    var order = new OrderEntity(user);
+
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    doNothing().when(securityUtils).assertAdmin();
+
+    assertThrows(IllegalStateException.class,
+        () -> orderService.shipOrder(1L, "Calle Falsa 123", "TRACK-001"));
+    verify(orderRepository, never()).save(any());
+  }
+
+  @Test
+  @DisplayName("shipOrder - should reject blank shipping address")
+  void shipOrder_withBlankShippingAddress_throwsException() {
+    var order = paidOrder();
+
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    doNothing().when(securityUtils).assertAdmin();
+
+    assertThrows(IllegalArgumentException.class,
+        () -> orderService.shipOrder(1L, "  ", "TRACK-001"));
+    verify(orderRepository, never()).save(any());
+  }
+
+  @Test
+  @DisplayName("shipOrder - should reject blank tracking number")
+  void shipOrder_withBlankTrackingNumber_throwsException() {
+    var order = paidOrder();
+
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    doNothing().when(securityUtils).assertAdmin();
+
+    assertThrows(IllegalArgumentException.class,
+        () -> orderService.shipOrder(1L, "Calle Falsa 123", " "));
+    verify(orderRepository, never()).save(any());
+  }
+
+  @Test
+  @DisplayName("deliverOrder - should deliver a shipped order")
+  void deliverOrder_whenShipped_marksAsDelivered() {
+    var order = paidOrder();
+    order.markAsShipped("Calle Falsa 123", "TRACK-001");
+
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    doNothing().when(securityUtils).assertAdmin();
+
+    orderService.deliverOrder(1L);
+
+    assertEquals(OrderStatus.DELIVERED, order.getStatus());
+    verify(orderRepository).save(order);
+  }
+
+  @Test
+  @DisplayName("deliverOrder - should reject delivering a paid but not shipped order")
+  void deliverOrder_whenPaid_throwsException() {
+    var order = paidOrder();
+
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    doNothing().when(securityUtils).assertAdmin();
+
+    assertThrows(IllegalStateException.class, () -> orderService.deliverOrder(1L));
+    verify(orderRepository, never()).save(any());
+  }
+
+  private OrderEntity paidOrder() {
+    var order = new OrderEntity(user);
+    order.markAsPaid();
+    return order;
   }
 
   @Test
@@ -157,5 +265,43 @@ class OrderServiceTest {
 
     assertNotNull(result);
     assertEquals(OrderStatus.PENDING, result.status());
+  }
+
+  @Test
+  @DisplayName("createOrder - should decrease stock from products when creating order")
+  void createOrder_withProducts_decreasesStock() {
+    var product = new ProductEntity("Mouse", "Wireless mouse", BigDecimal.valueOf(29.99), 10);
+    var cart = new CartEntity(user);
+    var item = new CartItemEntity(cart, product, 2, product.getUnitPrice());
+    cart.addItem(item);
+
+    when(cartRepository.findById(1L)).thenReturn(Optional.of(cart));
+    doNothing().when(securityUtils).assertOwnerOrAdmin(anyLong());
+    when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+    when(productRepository.saveAll(any())).thenAnswer(inv -> inv.getArgument(0));
+    when(orderMapper.toDto(any())).thenReturn(orderDto);
+
+    orderService.createOrder(1L);
+
+    assertEquals(8, product.getStock());
+    verify(productRepository).saveAll(any());
+  }
+
+  @Test
+  @DisplayName("cancelOrder - should restore stock when canceling a pending order")
+  void cancelOrder_whenPending_restoresStock() {
+    var product = new ProductEntity("Mouse", "Wireless mouse", BigDecimal.valueOf(29.99), 8);
+    var order = new OrderEntity(user);
+    order.addItem(new com.lautarorisso.eCommerce_api.model.OrderItemEntity(order, product, 2, BigDecimal.valueOf(29.99)));
+
+    when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+    doNothing().when(securityUtils).assertOwnerOrAdmin(anyLong());
+    when(orderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+    when(productRepository.saveAll(any())).thenAnswer(inv -> inv.getArgument(0));
+
+    orderService.cancelOrder(1L);
+
+    assertEquals(OrderStatus.CANCELLED, order.getStatus());
+    assertEquals(10, product.getStock());
   }
 }

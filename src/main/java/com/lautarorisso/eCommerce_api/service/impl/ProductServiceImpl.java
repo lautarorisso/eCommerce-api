@@ -100,16 +100,30 @@ public class ProductServiceImpl implements ProductService {
   @Transactional
   @Override
   public void deleteProduct(Long productId) {
-    if (!productRepository.existsById(productId)) {
-      throw new ResourceNotFoundException("Product", productId);
-    }
-    if (cartItemRepository.existsByProductIdAndActiveCart(productId)) {
-      throw new InvalidOperationException("Cannot delete product: it is in one or more active carts");
+    ProductEntity product = productRepository.findById(productId)
+        .orElseThrow(() -> new ResourceNotFoundException("Product", productId));
+    // T3/P1-5: Check any cart (not just active) to block deletion of referenced products
+    if (cartItemRepository.existsByProductId(productId)) {
+      throw new InvalidOperationException("Cannot delete product: it is in one or more carts");
     }
     if (orderItemRepository.existsByProductId(productId)) {
       throw new InvalidOperationException("Cannot delete product: it is in one or more orders");
     }
-    productRepository.deleteById(productId);
+    product.softDelete();
+    productRepository.save(product);
+  }
+
+  @Transactional
+  @Override
+  public ProductDto restoreProduct(Long productId) {
+    ProductEntity product = productRepository.findDeletedById(productId)
+        .orElseThrow(() -> new ResourceNotFoundException("Product", productId));
+    if (productRepository.existsByName(product.getName())) {
+      throw new DuplicateResourceException("Product", "name", product.getName());
+    }
+    product.restore();
+    ProductEntity savedProduct = productRepository.save(product);
+    return productMapper.toDto(savedProduct);
   }
 
   @Transactional

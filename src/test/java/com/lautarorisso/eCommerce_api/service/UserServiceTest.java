@@ -17,7 +17,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.lautarorisso.eCommerce_api.dto.request.CreateUserRequest;
 import com.lautarorisso.eCommerce_api.dto.response.UserDto;
 import com.lautarorisso.eCommerce_api.enums.Role;
+import com.lautarorisso.eCommerce_api.exceptions.DuplicateResourceException;
 import com.lautarorisso.eCommerce_api.exceptions.InvalidOperationException;
+import com.lautarorisso.eCommerce_api.exceptions.ResourceNotFoundException;
 import com.lautarorisso.eCommerce_api.mapper.UserMapper;
 import com.lautarorisso.eCommerce_api.model.CartEntity;
 import com.lautarorisso.eCommerce_api.model.UserEntity;
@@ -78,7 +80,7 @@ class UserServiceTest {
 
     userService.deleteUser(1L);
 
-    verify(userRepository).deleteById(1L);
+    verify(userRepository).save(any());
   }
 
   @Test
@@ -88,7 +90,7 @@ class UserServiceTest {
     when(cartRepository.findByUserId(1L)).thenReturn(Optional.of(new CartEntity(user)));
 
     assertThrows(InvalidOperationException.class, () -> userService.deleteUser(1L));
-    verify(userRepository, never()).deleteById(any());
+    verify(userRepository, never()).save(any());
   }
 
   @Test
@@ -116,5 +118,43 @@ class UserServiceTest {
 
     assertEquals("janedoe", result.username());
     verify(userRepository).save(any());
+  }
+
+  @Test
+  @DisplayName("restoreUser - should restore a soft-deleted user")
+  void restoreUser_whenDeleted_restoresAndReturnsDto() {
+    var deleted = new UserEntity("janedoe", "jane@example.com", "encoded", Role.USER);
+    deleted.softDelete();
+    when(userRepository.findDeletedById(1L)).thenReturn(Optional.of(deleted));
+    when(userRepository.existsByEmail("jane@example.com")).thenReturn(false);
+    when(userRepository.save(any())).thenReturn(deleted);
+    when(userMapper.toDto(deleted)).thenReturn(new UserDto(1L, "janedoe", "jane@example.com", Role.USER));
+
+    var result = userService.restoreUser(1L);
+
+    assertFalse(deleted.isDeleted());
+    assertEquals("janedoe", result.username());
+    verify(userRepository).save(deleted);
+  }
+
+  @Test
+  @DisplayName("restoreUser - should throw when no soft-deleted user exists")
+  void restoreUser_whenNotFound_throws() {
+    when(userRepository.findDeletedById(1L)).thenReturn(Optional.empty());
+
+    assertThrows(ResourceNotFoundException.class, () -> userService.restoreUser(1L));
+    verify(userRepository, never()).save(any());
+  }
+
+  @Test
+  @DisplayName("restoreUser - should throw when an active user already has the email")
+  void restoreUser_whenEmailTaken_throws() {
+    var deleted = new UserEntity("johndoe", "user@example.com", "encoded", Role.USER);
+    deleted.softDelete();
+    when(userRepository.findDeletedById(1L)).thenReturn(Optional.of(deleted));
+    when(userRepository.existsByEmail("user@example.com")).thenReturn(true);
+
+    assertThrows(DuplicateResourceException.class, () -> userService.restoreUser(1L));
+    verify(userRepository, never()).save(any());
   }
 }

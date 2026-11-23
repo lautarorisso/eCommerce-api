@@ -95,4 +95,14 @@ class UserControllerTest {
     mockMvc.perform(delete("/api/users/1"))
         .andExpect(status().isNoContent());
   }
+
+  @Test
+  @DisplayName("PATCH /api/users/{id}/restore - should restore and return 200")
+  void restoreUser_whenValid_returns200() throws Exception {
+    when(userService.restoreUser(1L)).thenReturn(userDto);
+
+    mockMvc.perform(patch("/api/users/1/restore"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.username").value("johndoe"));
+  }
 }

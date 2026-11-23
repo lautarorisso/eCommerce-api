@@ -20,4 +20,6 @@ public interface UserService {
   void deleteUser(Long userId);
 
   UserDto getCurrentUser();
+
+  UserDto restoreUser(Long userId);
 }

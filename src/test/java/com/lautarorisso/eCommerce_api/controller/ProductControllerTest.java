@@ -55,4 +55,14 @@ class ProductControllerTest {
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.name").value("Mouse"));
   }
+
+  @Test
+  @DisplayName("PATCH /api/products/{id}/restore - should restore and return 200")
+  void restoreProduct_whenValid_returns200() throws Exception {
+    when(productService.restoreProduct(1L)).thenReturn(mouse);
+
+    mockMvc.perform(patch("/api/products/1/restore"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.name").value("Mouse"));
+  }
 }

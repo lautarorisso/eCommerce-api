@@ -112,4 +112,17 @@ public class UserController {
   public void deleteUser(@PathVariable Long userId) {
     userService.deleteUser(userId);
   }
+
+  @PatchMapping("/{userId}/restore")
+  @Operation(summary = "Restore a soft-deleted user", description = "Restores a soft-deleted user by ID (admin only)")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "User restored"),
+      @ApiResponse(responseCode = "401", description = "Unauthorized"),
+      @ApiResponse(responseCode = "403", description = "Forbidden — requires ADMIN role"),
+      @ApiResponse(responseCode = "404", description = "User not found"),
+      @ApiResponse(responseCode = "409", description = "Active user with same email already exists")
+  })
+  public UserDto restoreUser(@PathVariable Long userId) {
+    return userService.restoreUser(userId);
+  }
 }

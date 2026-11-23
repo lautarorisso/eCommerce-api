@@ -75,6 +75,17 @@ public class CartController {
     return cartService.updateQuantity(cartId, productId, quantity);
   }
 
+  @PatchMapping("/{cartId}/recover")
+  @Operation(summary = "Recover an abandoned cart", description = "Reactivates an ABANDONED cart (owner or admin only)")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Cart reactivated"),
+      @ApiResponse(responseCode = "400", description = "Cart is already active"),
+      @ApiResponse(responseCode = "404", description = "Cart not found")
+  })
+  public CartDto recoverCart(@PathVariable Long cartId) {
+    return cartService.recoverCart(cartId);
+  }
+
   @DeleteMapping("/{cartId}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @Operation(summary = "Clear cart", description = "Removes all items from the cart")

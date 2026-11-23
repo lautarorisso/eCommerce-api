@@ -23,4 +23,6 @@ public interface ProductService {
 
   void restockProduct(Long productId, int quantity);
 
+  ProductDto restoreProduct(Long productId);
+
 }

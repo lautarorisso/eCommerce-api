@@ -1,6 +1,9 @@
 package com.lautarorisso.eCommerce_api.model;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+import com.lautarorisso.eCommerce_api.exceptions.InsufficientResourcesException;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,6 +15,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+
+import org.hibernate.annotations.SQLRestriction;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,6 +26,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "products")
+@SQLRestriction("deleted_at IS NULL")
 public class ProductEntity {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,6 +42,9 @@ public class ProductEntity {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "category_id")
   private CategoryEntity category;
+
+  @Column(name = "deleted_at")
+  private LocalDateTime deletedAt;
 
   @Version
   private Long version;
@@ -101,8 +111,27 @@ public class ProductEntity {
       throw new IllegalArgumentException("Quantity must be positive");
     }
     if (this.stock < quantity) {
-      throw new IllegalArgumentException("Not enough stock");
+      throw new InsufficientResourcesException("Not enough stock for product: " + this.name);
     }
     this.stock -= quantity;
+  }
+
+  public void increaseStock(int quantity) {
+    if (quantity <= 0) {
+      throw new IllegalArgumentException("Quantity must be positive");
+    }
+    this.stock += quantity;
+  }
+
+  public void softDelete() {
+    this.deletedAt = LocalDateTime.now();
+  }
+
+  public void restore() {
+    this.deletedAt = null;
+  }
+
+  public boolean isDeleted() {
+    return this.deletedAt != null;
   }
 }

@@ -101,7 +101,21 @@ public class UserServiceImpl implements UserService {
     if (orderRepository.existsByUserId(userId)) {
       throw new InvalidOperationException("Cannot delete user: user has orders");
     }
-    userRepository.deleteById(userId);
+    user.softDelete();
+    userRepository.save(user);
+  }
+
+  @Transactional
+  @Override
+  public UserDto restoreUser(Long userId) {
+    UserEntity user = userRepository.findDeletedById(userId)
+        .orElseThrow(() -> new ResourceNotFoundException("User", userId));
+    if (userRepository.existsByEmail(user.getEmail())) {
+      throw new DuplicateResourceException("User", "email", user.getEmail());
+    }
+    user.restore();
+    UserEntity savedUser = userRepository.save(user);
+    return userMapper.toDto(savedUser);
   }
 
   @Transactional(readOnly = true)

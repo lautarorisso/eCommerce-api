@@ -73,6 +73,19 @@ public class CategoryServiceImpl implements CategoryService {
     if (productRepository.existsByCategoryId(id)) {
       throw new InvalidOperationException("Cannot delete category: it has associated products");
     }
-    categoryRepository.delete(category);
+    category.softDelete();
+    categoryRepository.save(category);
+  }
+
+  @Transactional
+  @Override
+  public CategoryDto restoreCategory(Long id) {
+    CategoryEntity category = categoryRepository.findDeletedById(id)
+        .orElseThrow(() -> new ResourceNotFoundException("Category", id));
+    if (categoryRepository.existsByName(category.getName())) {
+      throw new DuplicateResourceException("Category", "name", category.getName());
+    }
+    category.restore();
+    return categoryMapper.toDto(categoryRepository.save(category));
   }
 }

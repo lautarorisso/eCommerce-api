@@ -93,4 +93,14 @@ class CategoryControllerTest {
     mockMvc.perform(delete("/api/categories/1"))
         .andExpect(status().isNoContent());
   }
+
+  @Test
+  @DisplayName("PATCH /api/categories/{id}/restore - should restore and return 200")
+  void restoreCategory_whenValid_returns200() throws Exception {
+    when(categoryService.restoreCategory(1L)).thenReturn(categoryDto);
+
+    mockMvc.perform(patch("/api/categories/1/restore"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.name").value("Electronics"));
+  }
 }
