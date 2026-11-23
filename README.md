@@ -124,7 +124,8 @@ Authorization: Bearer <token>
 | `GET` | `/api/users/{userId}` | Get user by ID | ADMIN |
 | `POST` | `/api/users` | Create a user | ADMIN |
 | `PATCH` | `/api/users/{userId}` | Update a user | ADMIN |
-| `DELETE` | `/api/users/{userId}` | Delete a user | ADMIN |
+| `DELETE` | `/api/users/{userId}` | Soft-delete a user | ADMIN |
+| `PATCH` | `/api/users/{userId}/restore` | Restore a soft-deleted user | ADMIN |
 
 ### Products
 
@@ -134,7 +135,8 @@ Authorization: Bearer <token>
 | `GET` | `/api/products/{productId}` | Get product by ID | Public |
 | `POST` | `/api/products` | Create a product | ADMIN |
 | `PATCH` | `/api/products/{productId}` | Update a product | ADMIN |
-| `DELETE` | `/api/products/{productId}` | Delete a product | ADMIN |
+| `DELETE` | `/api/products/{productId}` | Soft-delete a product (blocked if it is in any cart or order) | ADMIN |
+| `PATCH` | `/api/products/{productId}/restore` | Restore a soft-deleted product | ADMIN |
 | `PATCH` | `/api/products/{productId}/restock` | Add stock quantity | ADMIN |
 
 **Product filters:** `search`, `minPrice`, `maxPrice`, `inStock`, `categoryId`
@@ -147,7 +149,8 @@ Authorization: Bearer <token>
 | `GET` | `/api/categories/{id}` | Get category by ID | Public |
 | `POST` | `/api/categories` | Create a category | ADMIN |
 | `PATCH` | `/api/categories/{id}` | Update a category | ADMIN |
-| `DELETE` | `/api/categories/{id}` | Delete a category | ADMIN |
+| `DELETE` | `/api/categories/{id}` | Soft-delete a category | ADMIN |
+| `PATCH` | `/api/categories/{id}/restore` | Restore a soft-deleted category | ADMIN |
 
 ### Cart
 
@@ -167,7 +170,7 @@ Authorization: Bearer <token>
 | `POST` | `/api/orders` | Create order from cart | Authenticated |
 | `GET` | `/api/orders/user/{userId}` | List user orders (paginated) | Authenticated |
 | `GET` | `/api/orders/{orderId}` | Get order by ID | Authenticated |
-| `PATCH` | `/api/orders/{orderId}/cancel` | Cancel order (PENDING only) | Authenticated |
+| `PATCH` | `/api/orders/{orderId}/cancel` | Cancel order (PENDING only; restores stock) | Authenticated |
 | `PATCH` | `/api/orders/{orderId}/pay` | Pay order (PENDING only) | Authenticated |
 | `PATCH` | `/api/orders/{orderId}/ship?shippingAddress=...&trackingNumber=...` | Ship order (PAID only; requires both params) | Authenticated |
 | `PATCH` | `/api/orders/{orderId}/deliver` | Deliver order (SHIPPED only) | Authenticated |
@@ -222,15 +225,15 @@ src/main/java/com/lautarorisso/eCommerce_api/
 └── specification/    # JPA Specifications for dynamic queries
 ```
 
-## Known Limitations
+## Business Rules & Known Limitations
 
-These are intentional design decisions that simplify the system at the expense of production-level robustness:
-
-- **No stock reservation between cart and payment** — Stock is validated when adding items to the cart and when creating an order, but it is only actually deducted when the order is paid (`payOrder`). Between order creation and payment, other users could purchase the same stock. This approach simplifies inventory management: since stock is never deducted on order creation, cancelling a PENDING order doesn't require restoring stock. The trade-off is that stock availability at checkout time is best-effort, not guaranteed.
-
-- **Cancel only available for PENDING orders** — Orders can only be cancelled while in PENDING status, before payment and stock deduction. Once paid, the order must follow the full lifecycle (shipped → delivered). This is a direct consequence of the stock deduction model above.
-
-- **Hard deletes** — Users, products, and categories are physically deleted from the database rather than soft-deleted. This is appropriate for a portfolio project where historical data retention is not a requirement.
+- **Stock is reserved at order creation** — `createOrder` validates the cart prices and stock and deducts the stock right away; `payOrder` does not touch stock. Cancelling a PENDING order restores it.
+- **Price changes are rejected** — If a product's price changed after it was added to the cart, `createOrder` fails with a conflict and the cart must be updated.
+- **Cancel only available for PENDING orders** — Once paid, an order follows the full lifecycle (shipped → delivered).
+- **PENDING orders do not expire** — A PENDING order holds its stock until it is paid or cancelled; there is no automatic expiration.
+- **Soft deletes** — Users, products and categories are soft-deleted (`deleted_at`) and can be restored by an admin. A product that is in any cart (including abandoned ones) or in any order cannot be deleted.
+- **Abandoned carts** — Carts inactive for 24 hours are marked ABANDONED by a scheduled task and can be reactivated with the recover endpoint. No reminder emails are sent.
+- **Rate limiting is in-memory** — Limits (login, register, order creation, restock) are kept per instance and per client IP; they are configurable through `rate.limit.*` properties.
 
 ## License
 
