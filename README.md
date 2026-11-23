@@ -135,7 +135,7 @@ Authorization: Bearer <token>
 | `GET` | `/api/products/{productId}` | Get product by ID | Public |
 | `POST` | `/api/products` | Create a product | ADMIN |
 | `PATCH` | `/api/products/{productId}` | Update a product | ADMIN |
-| `DELETE` | `/api/products/{productId}` | Soft-delete a product (blocked if it is in any cart or order) | ADMIN |
+| `DELETE` | `/api/products/{productId}` | Soft-delete a product (blocked if it is in any cart or any non-cancelled order) | ADMIN |
 | `PATCH` | `/api/products/{productId}/restore` | Restore a soft-deleted product | ADMIN |
 | `PATCH` | `/api/products/{productId}/restock` | Add stock quantity | ADMIN |
 
@@ -224,16 +224,6 @@ src/main/java/com/lautarorisso/eCommerce_api/
 │   └── impl/         # Service implementations
 └── specification/    # JPA Specifications for dynamic queries
 ```
-
-## Business Rules & Known Limitations
-
-- **Stock is reserved at order creation** — `createOrder` validates the cart prices and stock and deducts the stock right away; `payOrder` does not touch stock. Cancelling a PENDING order restores it.
-- **Price changes are rejected** — If a product's price changed after it was added to the cart, `createOrder` fails with a conflict and the cart must be updated.
-- **Cancel only available for PENDING orders** — Once paid, an order follows the full lifecycle (shipped → delivered).
-- **PENDING orders do not expire** — A PENDING order holds its stock until it is paid or cancelled; there is no automatic expiration.
-- **Soft deletes** — Users, products and categories are soft-deleted (`deleted_at`) and can be restored by an admin. A product that is in any cart (including abandoned ones) or in any order cannot be deleted.
-- **Abandoned carts** — Carts inactive for 24 hours are marked ABANDONED by a scheduled task and can be reactivated with the recover endpoint. No reminder emails are sent.
-- **Rate limiting is in-memory** — Limits (login, register, order creation, restock) are kept per instance and per client IP; they are configurable through `rate.limit.*` properties.
 
 ## License
 

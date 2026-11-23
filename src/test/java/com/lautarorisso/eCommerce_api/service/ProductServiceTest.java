@@ -26,6 +26,7 @@ import com.lautarorisso.eCommerce_api.model.CategoryEntity;
 import com.lautarorisso.eCommerce_api.model.ProductEntity;
 import com.lautarorisso.eCommerce_api.repository.CartItemRepository;
 import com.lautarorisso.eCommerce_api.repository.CategoryRepository;
+import com.lautarorisso.eCommerce_api.enums.OrderStatus;
 import com.lautarorisso.eCommerce_api.repository.OrderItemRepository;
 import com.lautarorisso.eCommerce_api.repository.ProductRepository;
 import com.lautarorisso.eCommerce_api.service.impl.ProductServiceImpl;
@@ -96,13 +97,39 @@ class ProductServiceTest {
     var productToDelete = new ProductEntity("Keyboard", "Mechanical keyboard", BigDecimal.valueOf(49.99), 10);
     when(productRepository.findById(1L)).thenReturn(Optional.of(productToDelete));
     when(cartItemRepository.existsByProductId(1L)).thenReturn(false);
-    when(orderItemRepository.existsByProductId(1L)).thenReturn(false);
+    when(orderItemRepository.existsByProductIdAndOrder_StatusNot(1L, OrderStatus.CANCELLED)).thenReturn(false);
     when(productRepository.save(any())).thenReturn(productToDelete);
 
     productService.deleteProduct(1L);
 
     verify(productRepository).save(any());
     assertTrue(productToDelete.isDeleted());
+  }
+
+  @Test
+  @DisplayName("deleteProduct - should throw InvalidOperationException when product is in a non-cancelled order")
+  void deleteProduct_whenInActiveOrder_throwsException() {
+    var product = new ProductEntity("Keyboard", "Mechanical keyboard", BigDecimal.valueOf(49.99), 10);
+    when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+    when(cartItemRepository.existsByProductId(1L)).thenReturn(false);
+    when(orderItemRepository.existsByProductIdAndOrder_StatusNot(1L, OrderStatus.CANCELLED)).thenReturn(true);
+
+    assertThrows(InvalidOperationException.class, () -> productService.deleteProduct(1L));
+    verify(productRepository, never()).save(any());
+  }
+
+  @Test
+  @DisplayName("deleteProduct - should soft delete product when it only appears in cancelled orders")
+  void deleteProduct_whenOnlyInCancelledOrders_softDeletesProduct() {
+    var product = new ProductEntity("Keyboard", "Mechanical keyboard", BigDecimal.valueOf(49.99), 10);
+    when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+    when(cartItemRepository.existsByProductId(1L)).thenReturn(false);
+    when(orderItemRepository.existsByProductIdAndOrder_StatusNot(1L, OrderStatus.CANCELLED)).thenReturn(false);
+    when(productRepository.save(any())).thenReturn(product);
+
+    productService.deleteProduct(1L);
+
+    assertTrue(product.isDeleted());
   }
 
   @Test

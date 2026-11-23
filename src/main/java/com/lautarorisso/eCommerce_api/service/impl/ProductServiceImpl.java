@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.lautarorisso.eCommerce_api.dto.request.CreateProductRequest;
 import com.lautarorisso.eCommerce_api.dto.request.UpdateProductRequest;
 import com.lautarorisso.eCommerce_api.dto.response.ProductDto;
+import com.lautarorisso.eCommerce_api.enums.OrderStatus;
 import com.lautarorisso.eCommerce_api.exceptions.DuplicateResourceException;
 import com.lautarorisso.eCommerce_api.exceptions.InvalidOperationException;
 import com.lautarorisso.eCommerce_api.exceptions.ResourceNotFoundException;
@@ -106,8 +107,8 @@ public class ProductServiceImpl implements ProductService {
     if (cartItemRepository.existsByProductId(productId)) {
       throw new InvalidOperationException("Cannot delete product: it is in one or more carts");
     }
-    if (orderItemRepository.existsByProductId(productId)) {
-      throw new InvalidOperationException("Cannot delete product: it is in one or more orders");
+    if (orderItemRepository.existsByProductIdAndOrder_StatusNot(productId, OrderStatus.CANCELLED)) {
+      throw new InvalidOperationException("Cannot delete product: it is in one or more active orders");
     }
     product.softDelete();
     productRepository.save(product);

@@ -2,6 +2,9 @@ package com.lautarorisso.eCommerce_api.model;
 
 import java.math.BigDecimal;
 
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -27,8 +30,11 @@ public class OrderItemEntity {
   @JoinColumn(name = "order_id", nullable = false)
   private OrderEntity order;
   @ManyToOne(fetch = FetchType.LAZY)
+  @NotFound(action = NotFoundAction.IGNORE)
   @JoinColumn(name = "product_id", nullable = false)
   private ProductEntity product;
+  @Column(name = "product_name")
+  private String productName;
   @Column(nullable = false)
   private int quantity;
   @Column(nullable = false, precision = 10, scale = 2)
@@ -54,6 +60,7 @@ public class OrderItemEntity {
     }
     this.order = order;
     this.product = product;
+    this.productName = product.getName();
     this.quantity = quantity;
     this.unitPrice = unitPrice;
     this.subtotal = unitPrice.multiply(BigDecimal.valueOf(quantity));
