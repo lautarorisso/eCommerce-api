@@ -5,7 +5,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -20,25 +19,11 @@ public class RateLimitInterceptor extends OncePerRequestFilter {
 
   private static final Pattern PRODUCT_RESTOCK = Pattern.compile("^/api/products/[^/]+/restock$");
 
-  @Value("${rate.limit.login.max-attempts:5}")
-  private int loginMaxAttempts = 5;
-  @Value("${rate.limit.login.window-seconds:60}")
-  private long loginWindowSeconds = 60;
-
-  @Value("${rate.limit.register.max-attempts:5}")
-  private int registerMaxAttempts = 5;
-  @Value("${rate.limit.register.window-seconds:60}")
-  private long registerWindowSeconds = 60;
-
-  @Value("${rate.limit.order.max-attempts:10}")
-  private int orderMaxAttempts = 10;
-  @Value("${rate.limit.order.window-seconds:60}")
-  private long orderWindowSeconds = 60;
-
-  @Value("${rate.limit.restock.max-attempts:10}")
-  private int restockMaxAttempts = 10;
-  @Value("${rate.limit.restock.window-seconds:60}")
-  private long restockWindowSeconds = 60;
+  private static final int LOGIN_MAX_ATTEMPTS = 5;
+  private static final int REGISTER_MAX_ATTEMPTS = 5;
+  private static final int ORDER_MAX_ATTEMPTS = 10;
+  private static final int RESTOCK_MAX_ATTEMPTS = 10;
+  private static final long WINDOW_MS = 60_000;
 
   private final ConcurrentHashMap<String, AttemptInfo> attempts = new ConcurrentHashMap<>();
 
@@ -77,20 +62,20 @@ public class RateLimitInterceptor extends OncePerRequestFilter {
     String uri = request.getRequestURI();
     if ("POST".equalsIgnoreCase(method)) {
       if ("/api/auth/login".equals(uri)) {
-        return new LimitRule("login", loginMaxAttempts, loginWindowSeconds * 1000,
+        return new LimitRule("login", LOGIN_MAX_ATTEMPTS, WINDOW_MS,
             "Too many login attempts. Please try again later.");
       }
       if ("/api/auth/register".equals(uri)) {
-        return new LimitRule("register", registerMaxAttempts, registerWindowSeconds * 1000,
+        return new LimitRule("register", REGISTER_MAX_ATTEMPTS, WINDOW_MS,
             "Too many registration attempts. Please try again later.");
       }
       if ("/api/orders".equals(uri)) {
-        return new LimitRule("order", orderMaxAttempts, orderWindowSeconds * 1000,
+        return new LimitRule("order", ORDER_MAX_ATTEMPTS, WINDOW_MS,
             "Too many order attempts. Please try again later.");
       }
     }
     if ("PATCH".equalsIgnoreCase(method) && PRODUCT_RESTOCK.matcher(uri).matches()) {
-      return new LimitRule("restock", restockMaxAttempts, restockWindowSeconds * 1000,
+      return new LimitRule("restock", RESTOCK_MAX_ATTEMPTS, WINDOW_MS,
           "Too many restock attempts. Please try again later.");
     }
     return null;

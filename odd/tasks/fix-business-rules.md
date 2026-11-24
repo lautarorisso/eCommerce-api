@@ -30,6 +30,7 @@ L4: Implementación T1-T8 completada con tests primero (RED observado como fallo
 
 L5: Revisión posterior del código: T1-T8 verificadas contra la implementación. Corrección de L4: los endpoints de restore sí existen (users, products, categories). README sincronizado (sección de reglas de negocio, endpoints de soft delete/restore). Pendiente de verificación: `./mvnw test` no pudo ejecutarse en esta revisión (sin acceso a Maven Central).
 L6: Cierre del segundo hueco de S5: `deleteProduct` ya no se bloquea por órdenes CANCELLED (solo por carritos y órdenes no canceladas). Para que esas órdenes sigan siendo legibles tras el soft delete, `OrderItemEntity.product` usa `@NotFound(IGNORE)` y el nombre del producto se guarda como snapshot (`productName`). Sin verificar con `./mvnw test` (sin acceso a Maven Central en esa sesión).
+L7: Los límites de rate limit dejaron de ser configurables (`rate.limit.*` y `RATE_LIMIT_*` eliminadas); `RateLimitInterceptor` usa constantes (login/registro 5, órdenes/restock 10, ventana 60 s). Sin verificar con `./mvnw test`.
 
 ### Git branch
 
