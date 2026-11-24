@@ -82,14 +82,6 @@ All variables are optional and have defaults. They are defined in `.env.example`
 | `ADMIN_PASSWORD` | `admin123` | Seed admin password |
 | `DDL_AUTO` | `update` | Hibernate DDL strategy (`update`, `validate`, `none`) |
 | `SHOW_SQL` | `false` | Log SQL statements |
-| `RATE_LIMIT_LOGIN_MAX_ATTEMPTS` | `5` | Max login attempts per IP per window |
-| `RATE_LIMIT_LOGIN_WINDOW_SECONDS` | `60` | Login rate limit window in seconds |
-| `RATE_LIMIT_REGISTER_MAX_ATTEMPTS` | `5` | Max register attempts per IP per window |
-| `RATE_LIMIT_REGISTER_WINDOW_SECONDS` | `60` | Register rate limit window in seconds |
-| `RATE_LIMIT_ORDER_MAX_ATTEMPTS` | `10` | Max order creation attempts per IP per window |
-| `RATE_LIMIT_ORDER_WINDOW_SECONDS` | `60` | Order rate limit window in seconds |
-| `RATE_LIMIT_RESTOCK_MAX_ATTEMPTS` | `10` | Max restock attempts per IP per window |
-| `RATE_LIMIT_RESTOCK_WINDOW_SECONDS` | `60` | Restock rate limit window in seconds |
 
 On first startup, an admin user and 8 default categories are automatically created via `DataSeeder`.
 
